@@ -191,7 +191,9 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 Sampled data includes attacks from at least <strong>{len(attack_sources)} unique source ip addresses</strong><br>
                 <!--{", ".join(attack_sources)}-->
             </td>
-        </tr>
+        </tr>"""
+    try:
+        output += f"""
 
         <!-- Attack Protocols -->
         <tr style="border: none;">
@@ -210,7 +212,22 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 These <strong>{included_attacks} attacks</strong> represent <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
                 The <strong>remaining {total_attacks - included_attacks} attacks</strong> represent <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> if the observed attack packets.
             </td>
-        </tr>
+        </tr>"""
+    except:
+        update_log(f"Divide by zero condition avoided. Presenting alternate date in report. total_bw: {total_bw} total_packets: {total_packets} included_bw: {included_bw} included_packets: {included_packets}")
+        output += f"""
+        <!-- Very low traffic alternate data -->
+        <tr style="border: none;">
+            <td style="border: none; text-align: right;"><strong>Statistics:</strong></td>
+            <td style="border: none; text-align: left;">
+                Total bandwidth: {total_bw}<br>
+                Total packets: {total_packets}<br>
+                Included bandwidth: {included_bw}<br>
+                Included packets: {included_packets}
+            </td>
+        </tr>"""
+
+    output += f"""
     </table>
 </div>
 """
