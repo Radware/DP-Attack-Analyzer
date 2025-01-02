@@ -78,6 +78,8 @@ class clsConfig():
             self.set('General','Top_N','10')
         if not self.config.has_option('General', 'minimum_minutes_between_waves'):
             self.set('General','minimum_minutes_between_waves','5')
+        if not self.config.has_option('General', 'ExcludeFilters'):
+            self.set('General','ExcludeFilters','Anomalies, DOSShield')
             
         #if not self.config.has_option('General', 'Compress_Output'):
         #    self.set("General","Compress_Output","TRUE")

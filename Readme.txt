@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.16.4 - 31 December 2024 (Steve + Prateek)
+		Added custom exclude filter option to ini file. See: [General] - ExcludeFilters. Default is "Anomalies,DOSShield"
 	v0.16.3 - 31 December 2024 (Steve)
 		Fixed a divide by zero condition that could occur during very low traffic conditions.
 	v0.16.2 - 23 December 2024 (Prateek)

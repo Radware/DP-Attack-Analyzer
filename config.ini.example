@@ -6,6 +6,7 @@ rootpassword = radware
 
 [General]
 Top_N = 10
+ExcludeFilters = Anomalies,DOSShield
 
 [PreviousRun]
 epoch_from_time = 1727907868000
