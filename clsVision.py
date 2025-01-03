@@ -308,12 +308,9 @@ class clsVision:
                         "type": "termFilter",
                         "inverseFilter": True,
                         "field": "category",
-                        "value": exclude.trim()
+                        "value": exclude.strip()
                     }
                 )
-
-
-
         if filter_json:
             criteria.append(filter_json)
 
