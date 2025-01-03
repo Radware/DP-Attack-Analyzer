@@ -299,18 +299,25 @@ class clsVision:
                 "inverseFilter": True,
                 "field": "enrichmentContainer.eaaf.eaaf",
                 "value": "true"
+            },
+            {
+                "type": "termFilter",
+                "inverseFilter": True,
+                "field": "ruleName",
+                "value": "Packet Anomalies"
             }
         ]
-        excludes = config.get("General","ExcludeFilters","Anomalies")
-        for exclude in excludes.split(","):
-            criteria.append(
-                    {
-                        "type": "termFilter",
-                        "inverseFilter": True,
-                        "field": "category",
-                        "value": exclude.strip()
-                    }
-                )
+        excludes = config.get("General","ExcludeFilters", "")
+        if len(excludes) > 0:
+            for exclude in excludes.split(","):
+                criteria.append(
+                        {
+                            "type": "termFilter",
+                            "inverseFilter": True,
+                            "field": "name",
+                            "value": exclude.strip()
+                        }
+                    )
         if filter_json:
             criteria.append(filter_json)
 
