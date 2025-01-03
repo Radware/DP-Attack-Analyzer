@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.16.6 - 3 January 2025 (Prateek)
+		Changed default exclude filter to "Memcached-Server-Reflect". See: [General] - ExcludeFilters. 
 	v0.16.5 - 3 January 2025 (Steve + Prateek)
 		hardcoded excluding packet anomalies and changed the use configurable exclude filter in ini file to be attack name based. See: [General] - ExcludeFilters. Default is "DOSS-DNS-Ref-L4-Above-3000"
 	v0.16.4 - 3 January 2025 (Steve + Prateek)

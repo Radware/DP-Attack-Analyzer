@@ -6,7 +6,7 @@ rootpassword = radware
 
 [General]
 Top_N = 10
-ExcludeFilters = DOSS-DNS-Ref-L4-Above-3000
+ExcludeFilters = Memcached-Server-Reflect
 
 [PreviousRun]
 epoch_from_time = 1727907868000

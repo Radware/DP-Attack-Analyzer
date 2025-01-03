@@ -79,7 +79,7 @@ class clsConfig():
         if not self.config.has_option('General', 'minimum_minutes_between_waves'):
             self.set('General','minimum_minutes_between_waves','5')
         if not self.config.has_option('General', 'ExcludeFilters'):
-            self.set('General','ExcludeFilters','DOSS-DNS-Ref-L4-Above-3000')
+            self.set('General','ExcludeFilters','Memcached-Server-Reflect')
             
         #if not self.config.has_option('General', 'Compress_Output'):
         #    self.set("General","Compress_Output","TRUE")
