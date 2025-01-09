@@ -262,9 +262,104 @@ def createChart(Title, myData):
     <div id="{name}-bottom" style="width: 100%; height: 500px;"></div>
     """
     return html_content
-
-
 def createCombinedChart(Title, myData):
+    out_datasets = {}
+    #myData = {'dataset1Name':{'data': [{'row':{'timeStamp': 1731526443458, 'datatype1': 4, 'datatype2':0},etc]},etc)}}
+    
+    for dataset_name, dataset_data in myData.items():
+        #dataset_data = {'data': [{'row':{'timeStamp': 1731526443458, 'datatype1': 4, 'datatype2':0},etc]},etc)}
+        cur_dataset_pps = []
+        cur_dataset_bps = []
+        rows = dataset_data['data']
+
+        for row in rows:
+            #row = {'row': {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}}
+            cur_row = row['row']
+            #cur_row = {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}
+            timestamp = round(cur_row['timestamp'] / 15000) * 15000 #Round the timestamp to the nearest 15 seconds.
+            cur_row_pps = [timestamp, cur_row['Pps']]
+            cur_row_bps = [timestamp, cur_row['Bps']]
+            cur_dataset_pps.append(cur_row_pps)
+            cur_dataset_bps.append(cur_row_bps)
+        
+        sorted_dataset_pps = sorted(cur_dataset_pps, key=lambda x: x[0])
+        sorted_dataset_bps = sorted(cur_dataset_bps, key=lambda x: x[0])
+        out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
+        out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
+    #out_datasets = {'dataset_name_pps':[
+    #                                       [<timestamp>,<datapoint>],
+    #                                       [<timestamp>,<datapoint>],
+    #                                       etc
+    #                                   ]
+    #                'dataset_name2': etc...}
+    out_html = f"""
+        <h1>{Title}</h1>
+        <div id="checkboxes_{Title}"></div>
+        <div id="output_{Title}">
+            <table border="1" id="filteredTable_{Title}" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Dataset</th>
+                        <th>Timestamp</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        <script type="text/javascript">
+            const datasets = {json.dumps(out_datasets)};
+            const checkboxContainer = document.getElementById('checkboxes_{Title}');
+            const filteredTableBody = document.querySelector('#filteredTable_{Title} tbody');
+            const filteredDataset = {{}};
+
+            // Create checkboxes dynamically
+            Object.keys(datasets).forEach(function(datasetName) {{
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" value="` + datasetName + `" class="dataset-checkbox">
+                    ` + datasetName + `
+                `;
+                checkboxContainer.appendChild(label);
+                checkboxContainer.appendChild(document.createElement('br'));
+            }});
+
+            // Update the table with filtered dataset
+            function updateTable() {{
+                filteredTableBody.innerHTML = ''; // Clear previous rows
+                Object.keys(filteredDataset).forEach(function(datasetName) {{
+                    filteredDataset[datasetName].forEach(function(row) {{
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>` + datasetName + `</td>
+                            <td>` + new Date(row[0]).toLocaleString() + `</td>
+                            <td>` + row[1] + `</td>
+                        `;
+                        filteredTableBody.appendChild(tr);
+                    }});
+                }});
+            }}
+
+            // Event listener for checkboxes
+            document.querySelectorAll('.dataset-checkbox').forEach(function(checkbox) {{
+                checkbox.addEventListener('change', function() {{
+                    if (checkbox.checked) {{
+                        filteredDataset[checkbox.value] = datasets[checkbox.value];
+                    }} else {{
+                        delete filteredDataset[checkbox.value];
+                    }}
+                    updateTable(); // Update table whenever checkboxes change
+                }});
+            }});
+        </script>
+    """
+    return out_html
+
+
+
+def createCombinedChartOld(Title, myData):
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
