@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.16.7 - 9 January 2025 (Steve)
+		Additional fix for very low traffic condition.
 	v0.16.6 - 3 January 2025 (Prateek)
 		Changed default exclude filter to "Memcached-Server-Reflect". See: [General] - ExcludeFilters. 
 	v0.16.5 - 3 January 2025 (Steve + Prateek)
