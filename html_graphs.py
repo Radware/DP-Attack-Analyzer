@@ -293,78 +293,94 @@ def createCombinedChart(Title, myData):
     #                                   ]
     #                'dataset_name2': etc...}
     out_html = f"""
-        <h1>{Title}</h1>
-        <div id="checkboxes_{Title}"></div>
-        <div id="output_{Title}"></div>
-        <div id="chart_div_{Title}"></div>
-        <script type="text/javascript">
-            (function() {{
-                const datasets_{Title} = {json.dumps(out_datasets)};
-                const checkboxContainer_{Title} = document.getElementById('checkboxes_{Title}');
-                const filteredDataset_{Title} = {{}};
+    <h1>{Title}</h1>
+    <div id="checkboxes_{Title}"></div>
+    <div id="chart_div_pps_{Title}"></div>
+    <div id="chart_div_bps_{Title}"></div>
+    <script type="text/javascript">
+        (function() {{
+            const datasets_{Title} = {json.dumps(out_datasets)};
+            const checkboxContainer_{Title} = document.getElementById('checkboxes_{Title}');
+            const filteredDataset_pps_{Title} = {{}};
+            const filteredDataset_bps_{Title} = {{}};
 
-                // Create checkboxes dynamically
-                Object.keys(datasets_{Title}).forEach(function(datasetName) {{
+            // Create checkboxes dynamically for each dataset pair (_pps and _bps)
+            Object.keys(datasets_{Title}).forEach(function(datasetName) {{
+                if (datasetName.endsWith('_pps')) {{
+                    const baseName = datasetName.replace('_pps', ''); // Get the base dataset name
                     const label = document.createElement('label');
                     label.innerHTML = `
-                        <input type="checkbox" value="` + datasetName + `" class="dataset-checkbox-{Title}">
-                        ` + datasetName + `
+                        <input type="checkbox" value="` + baseName + `" class="dataset-checkbox-{Title}">
+                        ` + baseName + `
                     `;
                     checkboxContainer_{Title}.appendChild(label);
                     checkboxContainer_{Title}.appendChild(document.createElement('br'));
-                }});
-
-                // Prepare data for Google Charts
-                function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
-                    const allTimestamps = new Set();
-                    Object.values(filteredDataset).forEach(dataset => {{
-                        dataset.forEach(dataPoint => {{
-                            allTimestamps.add(dataPoint[0]);
-                        }});
-                    }});
-                    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
-                    const dataArray = [];
-                    const datasetNames = Object.keys(filteredDataset);
-                    dataArray.push(['Timestamp', ...datasetNames]);
-                    sortedTimestamps.forEach(timestamp => {{
-                        const row = [new Date(timestamp)];
-                        datasetNames.forEach(datasetName => {{
-                            const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
-                            row.push(dataPoint ? dataPoint[1] : null);
-                        }});
-                        dataArray.push(row);
-                    }});
-                    return dataArray;
                 }}
+            }});
 
-                // Update the Google Chart
-                function updateChart_{Title}() {{
-                    const chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_{Title});
-                    const data = google.visualization.arrayToDataTable(chartData);
-                    const options = {{
-                        title: '{Title} Combined Dataset Chart'
-                    }};
-                    const chart = new google.visualization.LineChart(document.getElementById('chart_div_{Title}'));
-                    chart.draw(data, options);
-                }}
-
-                // Load Google Charts and set up event listeners
-                google.charts.load('current', {{ packages: ['corechart'] }});
-                google.charts.setOnLoadCallback(() => {{
-                    document.querySelectorAll('.dataset-checkbox-{Title}').forEach(function(checkbox) {{
-                        checkbox.addEventListener('change', function() {{
-                            if (checkbox.checked) {{
-                                filteredDataset_{Title}[checkbox.value] = datasets_{Title}[checkbox.value];
-                            }} else {{
-                                delete filteredDataset_{Title}[checkbox.value];
-                            }}
-                            updateChart_{Title}(); // Update chart whenever checkboxes change
-                        }});
+            // Prepare data for Google Charts
+            function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
+                const allTimestamps = new Set();
+                Object.values(filteredDataset).forEach(dataset => {{
+                    dataset.forEach(dataPoint => {{
+                        allTimestamps.add(dataPoint[0]);
                     }});
                 }});
-            }})();
-        </script>
-    """
+                const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                const dataArray = [];
+                const datasetNames = Object.keys(filteredDataset);
+                dataArray.push(['Timestamp', ...datasetNames]);
+                sortedTimestamps.forEach(timestamp => {{
+                    const row = [new Date(timestamp)];
+                    datasetNames.forEach(datasetName => {{
+                        const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
+                        row.push(dataPoint ? dataPoint[1] : null);
+                    }});
+                    dataArray.push(row);
+                }});
+                return dataArray;
+            }}
+
+            // Update the Google Charts
+            function updateChart_{Title}(type) {{
+                let chartData, chart, chartDiv;
+                if (type === 'pps') {{
+                    chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_pps_{Title});
+                    chartDiv = document.getElementById('chart_div_pps_{Title}');
+                    chart = new google.visualization.LineChart(chartDiv);
+                }} else if (type === 'bps') {{
+                    chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_bps_{Title});
+                    chartDiv = document.getElementById('chart_div_bps_{Title}');
+                    chart = new google.visualization.LineChart(chartDiv);
+                }}
+                const data = google.visualization.arrayToDataTable(chartData);
+                const options = {{
+                    title: '{Title} ' + type.toUpperCase() + ' Combined Dataset Chart'
+                }};
+                chart.draw(data, options);
+            }}
+
+            // Load Google Charts and set up event listeners
+            google.charts.load('current', {{ packages: ['corechart'] }});
+            google.charts.setOnLoadCallback(() => {{
+                document.querySelectorAll('.dataset-checkbox-{Title}').forEach(function(checkbox) {{
+                    checkbox.addEventListener('change', function() {{
+                        const baseName = checkbox.value;
+                        if (checkbox.checked) {{
+                            filteredDataset_pps_{Title}[baseName + '_pps'] = datasets_{Title}[baseName + '_pps'];
+                            filteredDataset_bps_{Title}[baseName + '_bps'] = datasets_{Title}[baseName + '_bps'];
+                        }} else {{
+                            delete filteredDataset_pps_{Title}[baseName + '_pps'];
+                            delete filteredDataset_bps_{Title}[baseName + '_bps'];
+                        }}
+                        updateChart_{Title}('pps'); // Update PPS chart
+                        updateChart_{Title}('bps'); // Update BPS chart
+                    }});
+                }});
+            }});
+        }})();
+    </script>
+"""
     return out_html
 
 

@@ -251,8 +251,8 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Generating combined charts")
         #try:
         finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data)
-        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
-        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
+        finalHTML += "\n<h2>Combined Chart(old)</h2>"
+        finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
         #except:
         #    update_log("Unexpected createCombinedChart() error: ")
         #    error_message = traceback.format_exc()
