@@ -298,69 +298,71 @@ def createCombinedChart(Title, myData):
         <div id="output_{Title}"></div>
         <div id="chart_div_{Title}"></div>
         <script type="text/javascript">
-            const datasets = {json.dumps(out_datasets)};
-            const checkboxContainer = document.getElementById('checkboxes_{Title}');
-            const filteredDataset = {{}};
+            (function() {{
+                const datasets_{Title} = {json.dumps(out_datasets)};
+                const checkboxContainer_{Title} = document.getElementById('checkboxes_{Title}');
+                const filteredDataset_{Title} = {{}};
 
-            // Create checkboxes dynamically
-            Object.keys(datasets).forEach(function(datasetName) {{
-                const label = document.createElement('label');
-                label.innerHTML = `
-                    <input type="checkbox" value="` + datasetName + `" class="dataset-checkbox">
-                    ` + datasetName + `
-                `;
-                checkboxContainer.appendChild(label);
-                checkboxContainer.appendChild(document.createElement('br'));
-            }});
+                // Create checkboxes dynamically
+                Object.keys(datasets_{Title}).forEach(function(datasetName) {{
+                    const label = document.createElement('label');
+                    label.innerHTML = `
+                        <input type="checkbox" value="` + datasetName + `" class="dataset-checkbox-{Title}">
+                        ` + datasetName + `
+                    `;
+                    checkboxContainer_{Title}.appendChild(label);
+                    checkboxContainer_{Title}.appendChild(document.createElement('br'));
+                }});
 
-            // Prepare data for Google Charts
-            function prepareDataForGoogleCharts(filteredDataset) {{
-                const allTimestamps = new Set();
-                Object.values(filteredDataset).forEach(dataset => {{
-                    dataset.forEach(dataPoint => {{
-                        allTimestamps.add(dataPoint[0]);
+                // Prepare data for Google Charts
+                function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
+                    const allTimestamps = new Set();
+                    Object.values(filteredDataset).forEach(dataset => {{
+                        dataset.forEach(dataPoint => {{
+                            allTimestamps.add(dataPoint[0]);
+                        }});
+                    }});
+                    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                    const dataArray = [];
+                    const datasetNames = Object.keys(filteredDataset);
+                    dataArray.push(['Timestamp', ...datasetNames]);
+                    sortedTimestamps.forEach(timestamp => {{
+                        const row = [new Date(timestamp)];
+                        datasetNames.forEach(datasetName => {{
+                            const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
+                            row.push(dataPoint ? dataPoint[1] : null);
+                        }});
+                        dataArray.push(row);
+                    }});
+                    return dataArray;
+                }}
+
+                // Update the Google Chart
+                function updateChart_{Title}() {{
+                    const chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_{Title});
+                    const data = google.visualization.arrayToDataTable(chartData);
+                    const options = {{
+                        title: '{Title} Combined Dataset Chart'
+                    }};
+                    const chart = new google.visualization.LineChart(document.getElementById('chart_div_{Title}'));
+                    chart.draw(data, options);
+                }}
+
+                // Load Google Charts and set up event listeners
+                google.charts.load('current', {{ packages: ['corechart'] }});
+                google.charts.setOnLoadCallback(() => {{
+                    document.querySelectorAll('.dataset-checkbox-{Title}').forEach(function(checkbox) {{
+                        checkbox.addEventListener('change', function() {{
+                            if (checkbox.checked) {{
+                                filteredDataset_{Title}[checkbox.value] = datasets_{Title}[checkbox.value];
+                            }} else {{
+                                delete filteredDataset_{Title}[checkbox.value];
+                            }}
+                            updateChart_{Title}(); // Update chart whenever checkboxes change
+                        }});
                     }});
                 }});
-                const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
-                const dataArray = [];
-                const datasetNames = Object.keys(filteredDataset);
-                dataArray.push(['Timestamp', ...datasetNames]);
-                sortedTimestamps.forEach(timestamp => {{
-                    const row = [new Date(timestamp)];
-                    datasetNames.forEach(datasetName => {{
-                        const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
-                        row.push(dataPoint ? dataPoint[1] : null);
-                    }});
-                    dataArray.push(row);
-                }});
-                return dataArray;
-            }}
-
-            // Update the Google Chart
-            function updateChart() {{
-                const chartData = prepareDataForGoogleCharts(filteredDataset);
-                const data = google.visualization.arrayToDataTable(chartData);
-                const options = {{
-                    title: '{Title} Combined Dataset Chart'
-                }};
-                const chart = new google.visualization.LineChart(document.getElementById('chart_div_{Title}'));
-                chart.draw(data, options);
-            }}
-
-            // Load Google Charts and set up event listeners
-            google.charts.load('current', {{ packages: ['corechart'] }});
-            google.charts.setOnLoadCallback(() => {{
-                document.querySelectorAll('.dataset-checkbox').forEach(function(checkbox) {{
-                    checkbox.addEventListener('change', function() {{
-                        if (checkbox.checked) {{
-                            filteredDataset[checkbox.value] = datasets[checkbox.value];
-                        }} else {{
-                            delete filteredDataset[checkbox.value];
-                        }}
-                        updateChart(); // Update table whenever checkboxes change
-                    }});
-                }});
-            }});
+            }})();
         </script>
     """
     return out_html
