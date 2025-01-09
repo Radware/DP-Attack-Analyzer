@@ -259,7 +259,7 @@ def createChart(Title, myData):
             }});
         }}
     </script>
-    <div id="{name}-bottom" style="width: 100%; height: 500px;"></div>
+    <div id="{name}-bottom" style="width: 100%; height: 500px; display: none;"></div>
     """
     return html_content
 def createCombinedChart(Title, myData):
@@ -276,7 +276,7 @@ def createCombinedChart(Title, myData):
             #row = {'row': {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}}
             cur_row = row['row']
             #cur_row = {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}
-            timestamp = round(cur_row['timestamp'] / 15000) * 15000 #Round the timestamp to the nearest 15 seconds.
+            timestamp = round(cur_row['timeStamp'] / 15000) * 15000 #Round the timestamp to the nearest 15 seconds.
             cur_row_pps = [timestamp, cur_row['Pps']]
             cur_row_bps = [timestamp, cur_row['Bps']]
             cur_dataset_pps.append(cur_row_pps)
@@ -295,24 +295,11 @@ def createCombinedChart(Title, myData):
     out_html = f"""
         <h1>{Title}</h1>
         <div id="checkboxes_{Title}"></div>
-        <div id="output_{Title}">
-            <table border="1" id="filteredTable_{Title}" style="border-collapse: collapse; width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Dataset</th>
-                        <th>Timestamp</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Table rows will be inserted here -->
-                </tbody>
-            </table>
-        </div>
+        <div id="output_{Title}"></div>
+        <div id="chart_div_{Title}"></div>
         <script type="text/javascript">
             const datasets = {json.dumps(out_datasets)};
             const checkboxContainer = document.getElementById('checkboxes_{Title}');
-            const filteredTableBody = document.querySelector('#filteredTable_{Title} tbody');
             const filteredDataset = {{}};
 
             // Create checkboxes dynamically
@@ -326,31 +313,52 @@ def createCombinedChart(Title, myData):
                 checkboxContainer.appendChild(document.createElement('br'));
             }});
 
-            // Update the table with filtered dataset
-            function updateTable() {{
-                filteredTableBody.innerHTML = ''; // Clear previous rows
-                Object.keys(filteredDataset).forEach(function(datasetName) {{
-                    filteredDataset[datasetName].forEach(function(row) {{
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>` + datasetName + `</td>
-                            <td>` + new Date(row[0]).toLocaleString() + `</td>
-                            <td>` + row[1] + `</td>
-                        `;
-                        filteredTableBody.appendChild(tr);
+            // Prepare data for Google Charts
+            function prepareDataForGoogleCharts(filteredDataset) {{
+                const allTimestamps = new Set();
+                Object.values(filteredDataset).forEach(dataset => {{
+                    dataset.forEach(dataPoint => {{
+                        allTimestamps.add(dataPoint[0]);
                     }});
                 }});
+                const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                const dataArray = [];
+                const datasetNames = Object.keys(filteredDataset);
+                dataArray.push(['Timestamp', ...datasetNames]);
+                sortedTimestamps.forEach(timestamp => {{
+                    const row = [new Date(timestamp)];
+                    datasetNames.forEach(datasetName => {{
+                        const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
+                        row.push(dataPoint ? dataPoint[1] : null);
+                    }});
+                    dataArray.push(row);
+                }});
+                return dataArray;
             }}
 
-            // Event listener for checkboxes
-            document.querySelectorAll('.dataset-checkbox').forEach(function(checkbox) {{
-                checkbox.addEventListener('change', function() {{
-                    if (checkbox.checked) {{
-                        filteredDataset[checkbox.value] = datasets[checkbox.value];
-                    }} else {{
-                        delete filteredDataset[checkbox.value];
-                    }}
-                    updateTable(); // Update table whenever checkboxes change
+            // Update the Google Chart
+            function updateChart() {{
+                const chartData = prepareDataForGoogleCharts(filteredDataset);
+                const data = google.visualization.arrayToDataTable(chartData);
+                const options = {{
+                    title: '{Title} Combined Dataset Chart'
+                }};
+                const chart = new google.visualization.LineChart(document.getElementById('chart_div_{Title}'));
+                chart.draw(data, options);
+            }}
+
+            // Load Google Charts and set up event listeners
+            google.charts.load('current', {{ packages: ['corechart'] }});
+            google.charts.setOnLoadCallback(() => {{
+                document.querySelectorAll('.dataset-checkbox').forEach(function(checkbox) {{
+                    checkbox.addEventListener('change', function() {{
+                        if (checkbox.checked) {{
+                            filteredDataset[checkbox.value] = datasets[checkbox.value];
+                        }} else {{
+                            delete filteredDataset[checkbox.value];
+                        }}
+                        updateChart(); // Update table whenever checkboxes change
+                    }});
                 }});
             }});
         </script>

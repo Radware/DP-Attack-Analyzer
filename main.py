@@ -249,15 +249,18 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
-        try:
-            finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
-        except:
-            update_log("Unexpected createCombinedChart() error: ")
-            error_message = traceback.format_exc()
-            indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
-            update_log(indented_error_message)
+        #try:
+        finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data)
+        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
+        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
+        #except:
+        #    update_log("Unexpected createCombinedChart() error: ")
+        #    error_message = traceback.format_exc()
+        #    indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+        #    update_log(indented_error_message)
 
-        finalHTML += "\n<h2>Charts per attack ID</h2>"
+        #Charts per attack ID are removed from bottom of the output. To readd, uncomment the follwoing line and remove display: none; from the output of createChart()
+        #finalHTML += "\n<h2>Charts per attack ID</h2>"  
         update_log("Generating per-attack graphs")
         #Add an individual graph for each attack
         for attackID, data in attack_graph_data.items():
