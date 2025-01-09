@@ -295,8 +295,9 @@ def createCombinedChart(Title, myData):
     out_html = f"""
     <h1>{Title}</h1>
     <div id="checkboxes_{Title}"></div>
-    <div id="chart_div_pps_{Title}"></div>
-    <div id="chart_div_bps_{Title}"></div>
+    <div id="chart_div_pps_{Title}" style="width: 100%; height: 500px;"></div>
+    <div id="chart_div_bps_{Title}" style="width: 100%; height: 500px;"></div>
+
     <script type="text/javascript">
         (function() {{
             const datasets_{Title} = {json.dumps(out_datasets)};
@@ -355,7 +356,37 @@ def createCombinedChart(Title, myData):
                 }}
                 const data = google.visualization.arrayToDataTable(chartData);
                 const options = {{
-                    title: '{Title} ' + type.toUpperCase() + ' Combined Dataset Chart'
+                    curveType: 'function',
+                    legend: {{
+                        position: 'top',
+                        textStyle: {{ fontSize: 12 }},
+                        maxLines: 6
+                    }},
+                    hAxis: {{
+                        title: 'Time (UTC)',
+                        format: 'HH:mm:ss',
+                        slantedText: true,
+                        slantedTextAngle: 45
+                    }},
+                    vAxis: {{
+                        viewWindow: {{ min: 0 }}  // Ensure the y-axis includes 0
+                    }},
+                    focusTarget: 'category',
+                    interpolateNulls: true,
+                    tooltip: {{
+                        isHtml: true
+                    }},
+                    colors: [
+                        '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#8e44ad', '#1abc9c', '#f1c40f',
+                        '#e55b1b', '#9b59b6', '#16a085', '#34495e', '#c0392b', '#9bcf0e', '#d35400',
+                        '#2980b9', '#f5b041', '#4f81bd', '#95a5a6', '#7f8c8d', '#f1ca3a', '#e2431e',
+                        '#b2c2c8', '#34495e'
+                    ],
+                    animation: {{
+                        duration: 1000,    // Time in milliseconds for the animation (1 second here)
+                        easing: 'inAndOut',     // Easing function for smooth animation ('in', 'out', 'inAndOut' are common options)
+                        startup: false      // Ensures that animation happens on chart load
+                    }}
                 }};
                 chart.draw(data, options);
             }}
@@ -381,6 +412,7 @@ def createCombinedChart(Title, myData):
         }})();
     </script>
 """
+
     return out_html
 
 
