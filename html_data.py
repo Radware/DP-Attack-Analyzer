@@ -67,7 +67,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Attack ID</th>
-                <th>Device IP</th>
+                <th>Device Info</th>
                 <th>Policy</th>
                 <th>Attack Category</th>
                 <th>Attack Name</th>
@@ -101,12 +101,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
         # Main row
         html_content += f"""
-            <tr class="{row_class}">
+            <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
                 <!-- <td>{syslog_id}</td> -->
-                <td>{details.get('Device IP', 'N/A')}</td>
+                <td>{details.get('Device IP', 'N/A')}<br>{details.get('Device Name', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
                 <td>{details.get('Attack Name', 'N/A')}</td>
@@ -195,7 +195,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Attack ID</th>
-                <th>Device IP</th>
+                <th>Device Info</th>
                 <th>Policy</th>
                 <th>Attack Category</th>
                 <th>Attack Name</th>
@@ -237,7 +237,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
                 <!-- <td>{syslog_id}</td> -->
-                <td>{details.get('Device IP', 'N/A')}</td>
+                <td>{details.get('Device IP', 'N/A')}<br>{details.get('Device Name', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
                 <td>{details.get('Attack Name', 'N/A')}</td>

@@ -37,7 +37,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
                 last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time
             vectors.add(attack[1]["Attack Name"])
-    if first_attack_start is not None:
+    if first_attack_start is not None and last_attack_end is not None:
         elapsed_time = last_attack_end - first_attack_start
         elapsed_days = elapsed_time.days
         elapsed_hours = elapsed_time.seconds // 3600
@@ -89,10 +89,17 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         waves = merged_waves
 
         peak_traffic = highest_aggregate_15_seconds(combined_graph_data)
-        peak_traffic['bps_time'] = int(graph_data['bps']['dataMap']['maxValue']['timeStamp'])
-        peak_traffic['pps_time'] = int(graph_data['pps']['dataMap']['maxValue']['timeStamp'])
-        peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
-        peak_traffic['pps'] = "{:,}".format(int(float(graph_data['pps']['dataMap']['maxValue']['trafficValue'])))
+        if graph_data['bps']['dataMap']['maxValue']:
+            peak_traffic['bps_time'] = int(graph_data['bps']['dataMap']['maxValue']['timeStamp'])
+            peak_traffic['pps_time'] = int(graph_data['pps']['dataMap']['maxValue']['timeStamp'])
+            peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
+            peak_traffic['pps'] = "{:,}".format(int(float(graph_data['pps']['dataMap']['maxValue']['trafficValue'])))
+        else:
+            peak_traffic['bps_time'] = 0
+            peak_traffic['pps_time'] = 0
+            peak_traffic['bps'] = 0
+            peak_traffic['pps'] = 0
+        
         #peak_traffic = {
         #    'bps': "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue']))),
         #    'bps_time': int(graph_data['bps']['dataMap']['maxValue']['timeStamp']),

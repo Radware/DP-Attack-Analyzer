@@ -262,38 +262,40 @@ def createChart(Title, myData):
     <div id="{name}-bottom" style="width: 100%; height: 500px; display: none;"></div>
     """
     return html_content
+
 def createCombinedChart(Title, myData):
+    import json
+
     out_datasets = {}
-    #myData = {'dataset1Name':{'data': [{'row':{'timeStamp': 1731526443458, 'datatype1': 4, 'datatype2':0},etc]},etc)}}
-    
+    metadata_map = {}
+
     for dataset_name, dataset_data in myData.items():
-        #dataset_data = {'data': [{'row':{'timeStamp': 1731526443458, 'datatype1': 4, 'datatype2':0},etc]},etc)}
         cur_dataset_pps = []
         cur_dataset_bps = []
         rows = dataset_data['data']
+        metadata_map[dataset_name] = dataset_data.get('metadata', {})
 
         for row in rows:
-            #row = {'row': {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}}
             cur_row = row['row']
-            #cur_row = {'timestamp': 1731526443458, 'Pps': 0, 'Bps': 32}
-            timestamp = round(cur_row['timeStamp'] / 15000) * 15000 #Round the timestamp to the nearest 15 seconds.
+            timestamp = round(cur_row['timeStamp'] / 15000) * 15000  # Round to the nearest 15 seconds
             cur_row_pps = [timestamp, cur_row['Pps']]
             cur_row_bps = [timestamp, cur_row['Bps']]
             cur_dataset_pps.append(cur_row_pps)
             cur_dataset_bps.append(cur_row_bps)
-        
+
         sorted_dataset_pps = sorted(cur_dataset_pps, key=lambda x: x[0])
         sorted_dataset_bps = sorted(cur_dataset_bps, key=lambda x: x[0])
         out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
         out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
-    #out_datasets = {'dataset_name_pps':[
-    #                                       [<timestamp>,<datapoint>],
-    #                                       [<timestamp>,<datapoint>],
-    #                                       etc
-    #                                   ]
-    #                'dataset_name2': etc...}
+
+    sorted_keys = sorted(
+        out_datasets.keys(),
+        key=lambda k: out_datasets[k][0][0] if out_datasets[k] else float('inf')
+    )
+
+    out_datasets = {key: out_datasets[key] for key in sorted_keys}
+
     out_html = f"""
-    <h1>{Title}</h1>
     <div id="checkboxes_{Title}"></div>
     <div id="chart_div_pps_{Title}" style="width: 100%; height: 500px;"></div>
     <div id="chart_div_bps_{Title}" style="width: 100%; height: 500px;"></div>
@@ -301,6 +303,7 @@ def createCombinedChart(Title, myData):
     <script type="text/javascript">
         (function() {{
             const datasets_{Title} = {json.dumps(out_datasets)};
+            const metadataMap_{Title} = {json.dumps(metadata_map)};
             const checkboxContainer_{Title} = document.getElementById('checkboxes_{Title}');
             const filteredDataset_pps_{Title} = {{}};
             const filteredDataset_bps_{Title} = {{}};
@@ -310,10 +313,8 @@ def createCombinedChart(Title, myData):
                 if (datasetName.endsWith('_pps')) {{
                     const baseName = datasetName.replace('_pps', ''); // Get the base dataset name
                     const label = document.createElement('label');
-                    label.innerHTML = `
-                        <input type="checkbox" value="` + baseName + `" class="dataset-checkbox-{Title}">
-                        ` + baseName + `
-                    `;
+                    label.innerHTML = 
+                        `<input type="checkbox" value="${{baseName}}" class="dataset-checkbox-{Title}"> ${{baseName}}`;
                     checkboxContainer_{Title}.appendChild(label);
                     checkboxContainer_{Title}.appendChild(document.createElement('br'));
                 }}
@@ -330,17 +331,40 @@ def createCombinedChart(Title, myData):
                 const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
                 const dataArray = [];
                 const datasetNames = Object.keys(filteredDataset);
-                dataArray.push(['Timestamp', ...datasetNames]);
+            
+                // Add headers, including a tooltip column for each dataset
+                const headerRow = ['Timestamp'];
+                datasetNames.forEach(name => {{
+                    headerRow.push(name); // Data column
+                    headerRow.push({{
+                        type: 'string',
+                        role: 'tooltip',
+                        p: {{ html: true }}
+                    }}); // Tooltip column
+                }});
+                dataArray.push(headerRow);
+            
+                // Populate rows with data and tooltips
                 sortedTimestamps.forEach(timestamp => {{
                     const row = [new Date(timestamp)];
                     datasetNames.forEach(datasetName => {{
                         const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
-                        row.push(dataPoint ? dataPoint[1] : null);
+                        const value = dataPoint ? dataPoint[1] : null;
+                        row.push(value); // Data value
+                        if (value !== null) {{
+                            const metadata = metadataMap_{Title}[datasetName.replace('_pps', '').replace('_bps', '')];
+                            //row.push(`<div><strong>Value:</strong> ${{value}} ${{JSON.stringify(metadata)}}</div>`); // Tooltip
+                            row.push(`<div style="margin-left: 20px;"><strong>Value:</strong> ${{value}} <br>${{Object.entries(metadata).map(([key, value]) => `${{key}}: ${{value}}`).join('<br>')}}</div>`); // Tooltip
+                            
+                        }} else {{
+                            row.push(null)
+                        }}
                     }});
                     dataArray.push(row);
                 }});
                 return dataArray;
             }}
+
 
             // Update the Google Charts
             function updateChart_{Title}(type) {{
@@ -369,24 +393,13 @@ def createCombinedChart(Title, myData):
                         slantedTextAngle: 45
                     }},
                     vAxis: {{
-                        viewWindow: {{ min: 0 }}  // Ensure the y-axis includes 0
+                        viewWindow: {{ min: 0 }}
                     }},
-                    focusTarget: 'category',
-                    interpolateNulls: true,
                     tooltip: {{
                         isHtml: true
                     }},
-                    colors: [
-                        '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#8e44ad', '#1abc9c', '#f1c40f',
-                        '#e55b1b', '#9b59b6', '#16a085', '#34495e', '#c0392b', '#9bcf0e', '#d35400',
-                        '#2980b9', '#f5b041', '#4f81bd', '#95a5a6', '#7f8c8d', '#f1ca3a', '#e2431e',
-                        '#b2c2c8', '#34495e'
-                    ],
-                    animation: {{
-                        duration: 1000,    // Time in milliseconds for the animation (1 second here)
-                        easing: 'inAndOut',     // Easing function for smooth animation ('in', 'out', 'inAndOut' are common options)
-                        startup: false      // Ensures that animation happens on chart load
-                    }}
+                    focusTarget: 'category',
+                    interpolateNulls: true
                 }};
                 chart.draw(data, options);
             }}
@@ -407,13 +420,18 @@ def createCombinedChart(Title, myData):
                         updateChart_{Title}('pps'); // Update PPS chart
                         updateChart_{Title}('bps'); // Update BPS chart
                     }});
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event('change'));
                 }});
             }});
         }})();
     </script>
-"""
+    """
 
     return out_html
+
+
+
 
 
 

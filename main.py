@@ -89,7 +89,7 @@ if __name__ == '__main__':
         found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
         update_log(f"Files found: {found_files}")
        
-        syslog_ids, syslog_details = data_parser.parse_response_file(v)
+        syslog_ids, syslog_details = data_parser.parse_response_file(v, dp_list_ip)
         #print(syslog_details)
         all_results = {}
 
@@ -138,6 +138,11 @@ if __name__ == '__main__':
             if details.get('graph', False):
                 attackData = v.getRawAttackSSH(details['Attack ID'])
                 if len(attackData.get('data',"")) > 2:
+                    attackData['metadata'] = {
+                        'DefensePro IP':details['Device IP'],
+                        'DefensePro Name':dp_list_ip[details['Device IP']]['name'],
+                        'Policy':details['Policy']
+                        }
                     attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
         with open(temp_folder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
@@ -250,9 +255,9 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
         #try:
-        finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data)
-        finalHTML += "\n<h2>Combined Chart(old)</h2>"
-        finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
+        finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
+        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
+        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
         #except:
         #    update_log("Unexpected createCombinedChart() error: ")
         #    error_message = traceback.format_exc()

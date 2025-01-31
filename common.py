@@ -10,6 +10,8 @@ script_start_time = datetime.datetime.now()
 
 temp_folder = "./Temp/"
 log_file = temp_folder + "Attack-Story.log"
+if not os.path.exists(temp_folder):
+    os.makedirs(temp_folder)
 
 def update_log(message):
     print(message)
@@ -125,7 +127,3 @@ class clsConfig():
 
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
-
-
-
-
