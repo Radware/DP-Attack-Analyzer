@@ -264,8 +264,27 @@ def createChart(Title, myData):
     return html_content
 
 def createCombinedChart(Title, myData):
-    import json
-
+    """
+    Build HTML+JS to render a combined Google Chart with PPS/BPS lines,
+    including metadata in the tooltip.
+    
+    myData structure example:
+      {
+        "dataset1": {
+          "data": [
+            {"row": {"timeStamp": 1731526443458, "Bps": 4, "Pps": 0}},
+            {"row": {"timeStamp": 1731526458458, "Bps": 10, "Pps": 2}},
+            ...
+          ],
+          "metadata": {"dp_name": "DataPoint1", "other_info": "..." }
+        },
+        "dataset2": {
+          "data": [...],
+          "metadata": {...}
+        },
+        ...
+      }
+    """
     out_datasets = {}
     metadata_map = {}
 
@@ -427,12 +446,7 @@ def createCombinedChart(Title, myData):
         }})();
     </script>
     """
-
     return out_html
-
-
-
-
 
 
 def createCombinedChartOld(Title, myData):
