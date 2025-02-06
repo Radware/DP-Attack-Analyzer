@@ -89,7 +89,7 @@ if __name__ == '__main__':
         found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
         update_log(f"Files found: {found_files}")
        
-        syslog_ids, syslog_details = data_parser.parse_response_file(v, dp_list_ip)
+        syslog_ids, syslog_details = data_parser.parse_response_file(v)
         #print(syslog_details)
         all_results = {}
 
@@ -168,6 +168,7 @@ Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.t
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
 DPs: {', '.join(device_ips)}
+Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
         
         with open(temp_folder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
@@ -325,4 +326,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         if config.get("Email","send_email","val").upper() == "TRUE":
             send_email.send_email(output_file)
-        update_log("Execution completed")
+        if common_globals['unavailable_devices']:
+            update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")
+        else:
+            update_log("Execution completed")

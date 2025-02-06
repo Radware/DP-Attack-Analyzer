@@ -212,8 +212,10 @@ def user_selects_defensePros(v):
 
                 if invalid_entries:
                     if used_args:
-                        update_log(f"Error processing argument - <DefensePro list>. Received {device_entries}. The following entries are invalid or not available: {', '.join(invalid_entries)}")
-                        exit(1)
+                        update_log(f"Error processing argument - <DefensePro list>. Received {device_entries}. \r\n\tThe following entries are invalid or not available: {', '.join(invalid_entries)}. The final report will not include unavailable devices")
+                        #exit(1)
+                        common_globals['unavailable_devices'] = invalid_entries
+                        break
                     else:
                         print(f"The following entries are invalid or not available: {', '.join(invalid_entries)}")
                 elif valid_ips:

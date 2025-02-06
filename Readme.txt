@@ -73,6 +73,11 @@
 
 
 # Version Control
+	v0.17.1 - 6 February 2025 (Steve + Prateek)
+		Added logic to skip if device is not available. 
+			Unavailable devices will be listed in the final report.
+			Unavailable devices will be part of the email body.
+		Corrected text alignment for execution details at the top of the final report.
 	v0.17.0 - 31 January 2025 (Steve)
 		Rewrote combined graph code.
 			Datasets can now contan an arbitrary number of metadata lines that will be displayed in the onHover tooltip. 

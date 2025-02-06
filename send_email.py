@@ -30,7 +30,9 @@ def attach_files(msg, compressed_output):
     attachment.close()
 
 def email_body():
-    email_body = f'\r\n\r\nAttack Story'                     
+    email_body = f'\r\n\r\nAttack Story'
+    if common_globals['unavailable_devices']:
+        email_body += f"\r\n Warning: \r\n The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}"                     
     return email_body
 
 def send_email(compressed_output):
@@ -52,6 +54,8 @@ def send_email(compressed_output):
     #msg["Subject"] = f"Attack Story - {formatted_datetime}"
     msg["Subject"] = f'Attack Story - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")}'
     attach_files(msg,compressed_output)
+    if common_globals['unavailable_devices']:
+        msg["Subject"] += " With Warnings"
     msg_body=email_body()
     msg.attach(MIMEText(msg_body, 'html'))
     try:
