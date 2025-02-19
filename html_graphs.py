@@ -306,6 +306,24 @@ def createCombinedChart(Title, myData):
         sorted_dataset_bps = sorted(cur_dataset_bps, key=lambda x: x[0])
         out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
         out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
+    
+    #Create Aggregate datasets
+    aggregate_data_pps = {}
+    aggregate_data_bps = {}
+    for dataset_name, dataset_data in out_datasets.items():
+        for row in dataset_data:
+            timestamp = row[0]
+            value = row[1]
+            if '_pps' in dataset_name:
+                aggregate_data_pps[timestamp] = aggregate_data_pps.get(timestamp,0) + value
+            else:
+                aggregate_data_bps[timestamp] = aggregate_data_bps.get(timestamp,0) + value
+
+    aggregate_pps_list = sorted([[key, value] for key, value in aggregate_data_pps.items()], key=lambda x: x[0])
+    aggregate_bps_list = sorted([[key, value] for key, value in aggregate_data_bps.items()], key=lambda x: x[0])
+    out_datasets['Aggregate_pps'] = aggregate_pps_list 
+    out_datasets['Aggregate_bps'] = aggregate_bps_list
+    metadata_map['Aggregate'] = {}
 
     sorted_keys = sorted(
         out_datasets.keys(),
@@ -342,15 +360,18 @@ def createCombinedChart(Title, myData):
             // Prepare data for Google Charts
             function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
                 const allTimestamps = new Set();
+                console.log("3.1.1");
                 Object.values(filteredDataset).forEach(dataset => {{
                     dataset.forEach(dataPoint => {{
                         allTimestamps.add(dataPoint[0]);
                     }});
                 }});
+                console.log("3.1.2");
                 const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                console.log("3.1.3");
                 const dataArray = [];
                 const datasetNames = Object.keys(filteredDataset);
-            
+                console.log("3.1.4");
                 // Add headers, including a tooltip column for each dataset
                 const headerRow = ['Timestamp'];
                 datasetNames.forEach(name => {{
@@ -362,7 +383,7 @@ def createCombinedChart(Title, myData):
                     }}); // Tooltip column
                 }});
                 dataArray.push(headerRow);
-            
+                console.log("3.1.5");
                 // Populate rows with data and tooltips
                 sortedTimestamps.forEach(timestamp => {{
                     const row = [new Date(timestamp)];
@@ -389,9 +410,15 @@ def createCombinedChart(Title, myData):
             function updateChart_{Title}(type) {{
                 let chartData, chart, chartDiv;
                 if (type === 'pps') {{
+                    console.log("3.1")
+                    console.log(prepareDataForGoogleCharts_{Title})
+                    console.log(filteredDataset_pps_{Title})
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_pps_{Title});
+                    console.log("3.2")
                     chartDiv = document.getElementById('chart_div_pps_{Title}');
+                    console.log("3.3")
                     chart = new google.visualization.LineChart(chartDiv);
+                    console.log("3.4")
                 }} else if (type === 'bps') {{
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_bps_{Title});
                     chartDiv = document.getElementById('chart_div_bps_{Title}');
@@ -430,17 +457,23 @@ def createCombinedChart(Title, myData):
                     checkbox.addEventListener('change', function() {{
                         const baseName = checkbox.value;
                         if (checkbox.checked) {{
+                            console.log("1");
                             filteredDataset_pps_{Title}[baseName + '_pps'] = datasets_{Title}[baseName + '_pps'];
                             filteredDataset_bps_{Title}[baseName + '_bps'] = datasets_{Title}[baseName + '_bps'];
+                            console.log("2")
                         }} else {{
                             delete filteredDataset_pps_{Title}[baseName + '_pps'];
                             delete filteredDataset_bps_{Title}[baseName + '_bps'];
                         }}
+                        console.log("3")
                         updateChart_{Title}('pps'); // Update PPS chart
+                        console.log("4")
                         updateChart_{Title}('bps'); // Update BPS chart
+                        console.log("5")
                     }});
                     checkbox.checked = true;
                     checkbox.dispatchEvent(new Event('change'));
+                    console.log("6")
                 }});
             }});
         }})();

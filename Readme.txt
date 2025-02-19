@@ -73,6 +73,12 @@
 
 
 # Version Control
+	v0.17.2 - 18 February 2025 (Steve)
+		Added aggregate line to combined graph
+		DefensePro Name should appear in tables instead of "N/A"
+		Improved html syntax in html_attack_summary
+		Summary text should now only pluralize when appropriate
+		Fixed typo in summary text.
 	v0.17.1 - 6 February 2025 (Steve + Prateek)
 		Added logic to skip if device is not available. 
 			Unavailable devices will be listed in the final report.

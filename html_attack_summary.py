@@ -162,10 +162,11 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             
             for wave in waves:
                 output += f"""<br><strong>{wave['start'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{wave['end'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> - <strong>{len(wave['attacks'])} attacks</strong>"""
+            output += """
+                </td>
+            </tr>"""
 
         output += f"""
-                </td>
-            </tr>
 
             <!-- Attack Vectors -->
             <tr style="border: none;">
@@ -186,7 +187,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attacked Destinations:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Attacks were identified against <strong>{len(attacked_destinations)} destination ip addresses</strong> and <strong>{len(destination_ports)} destination ports.</strong><br>
+                    Attacks were identified against <strong>{len(attacked_destinations)} destination IP address{'es' if len(attacked_destinations) != 1 else ''}</strong> and <strong>{len(destination_ports)} destination port{'s' if len(destination_ports) != 1 else ''}.</strong><br>
                     IPs: {", ".join(attacked_destinations)}<br>
                     Ports: {", ".join(destination_ports)}
                 </td>
@@ -196,7 +197,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Sources:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Sampled data includes attacks from at least <strong>{len(attack_sources)} unique source ip addresses</strong><br>
+                    Sampled data includes attacks from at least <strong>{len(attack_sources)} unique source IP addresses</strong><br>
                     <!--{", ".join(attack_sources)}-->
                 </td>
             </tr>"""
@@ -216,9 +217,9 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>TopN Coverage:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Of the <strong>{total_attacks} total attacks</strong> observed over the specified time period, this report is filtered based on the <strong>{included_attacks} unique attacks</strong> included in the <strong>Top {topN} bps</strong> and <strong>Top {topN} pps</strong> tables.<br>
-                    These <strong>{included_attacks} attacks</strong> represent <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
-                    The <strong>remaining {total_attacks - included_attacks} attacks</strong> represent <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> if the observed attack packets.
+                    Of the <strong>{total_attacks} total attack{'s' if total_attacks != 1 else ''}</strong> observed over the specified time period, this report is filtered based on the <strong>{included_attacks} unique attacks</strong> included in the <strong>Top {topN} bps</strong> and <strong>Top {topN} pps</strong> tables.<br>
+                    These <strong>{included_attacks} attack{'s' if included_attacks != 1 else ''}</strong> represent <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
+                    The <strong>remaining {total_attacks - included_attacks} attack{'s' if (total_attacks - included_attacks) != 1 else ''}</strong> represent <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> of the observed attack packets.
                 </td>
             </tr>"""
         except:

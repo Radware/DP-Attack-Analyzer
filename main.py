@@ -110,6 +110,8 @@ if __name__ == '__main__':
 
         # Calculate top BPS and PPS using html_data.get_top_n
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
+        for attack in top_by_bps + top_by_pps:
+            attack[1]['Device Name'] = dp_list_ip.get(attack[1].get('Device IP', 'N/A'),'N/A')['name']
         with open(temp_folder + 'TopMetrics.json', 'w') as file:
             json.dump({
                 'top_by_bps': top_by_bps,
