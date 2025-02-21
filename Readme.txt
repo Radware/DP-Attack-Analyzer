@@ -80,7 +80,6 @@
 			Added commas to numbers presented in on-hover tooltips.
 			Added title headers to the graphs.
 			Changed graph order: BPS now appears before PPS for consistency.
-			Changed the order of the combined graphs so BPS appears before PPS to match the ordering of the rest of the report.
 		Attack Summary:
 			Improved html syntax.
 			Attack vectors are now sorted by the highest recorded bandwidth for each attack type and will display the peak bandwidth for each.
