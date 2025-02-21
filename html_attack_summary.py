@@ -28,7 +28,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
 
     first_attack_start = None
     last_attack_end = None
-    vectors = set()
+    vectors = {}
     for topkey in ['top_by_bps', 'top_by_pps']:
         for attack in top_metrics[topkey]:
             if attack[1]['Policy'] != 'Packet Anomalies':
@@ -36,7 +36,14 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 end_time = datetime.datetime.strptime(attack[1]["End Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
                 first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
                 last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time
-            vectors.add(attack[1]["Attack Name"])
+            attack_name = attack[1]["Attack Name"]
+            if vectors.get(attack_name, None) is None:
+                vectors[attack_name] = {}
+            vectors[attack_name]['gbps'] = vectors[attack_name].get('gbps',0) + attack[1]['Max_Attack_Rate_Gbps']
+            vectors[attack_name]['highest_gbps'] = max(vectors[attack_name].get('highest_gbps',0), attack[1]['Max_Attack_Rate_Gbps'])
+            
+    sorted_vectors = sorted(vectors.items(), key=lambda x: x[1]['highest_gbps'], reverse=True)
+
     if first_attack_start is not None and last_attack_end is not None:
         elapsed_time = last_attack_end - first_attack_start
         elapsed_days = elapsed_time.days
@@ -66,7 +73,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                             # Merge overlapping event into the wave segment
                             wave['start'] = min(wave['start'], start_time)
                             wave['end'] = max(wave['end'], end_time)
-                            wave['attacks'].append(attack)
+                            if not attack in wave['attacks']:
+                                wave['attacks'].append(attack)
                             break
                     else:
                         waves.append({'start': start_time, 'end': end_time, 'attacks': [attack]})
@@ -146,7 +154,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
 
         output = f"""
     <div style="line-height: 1.5; text-align: center;">
-        <table style="width: 80%; margin: 0 auto; border-collapse: collapse;">
+        <table style="width: 80%; margin: 0 auto; border-collapse: collapse; padding: 8px;">
             <!-- Attack timeframe -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Timeframe:</strong></td>
@@ -157,7 +165,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             output += f"""
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Waves:</strong></td>
-                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack waves</strong> with a minimum gap of <strong>{minimum_minutes_between_waves} minutes</strong> between attack waves.
+                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack waves</strong> separated by at least <strong>{minimum_minutes_between_waves} minutes</strong>.
             """
             
             for wave in waves:
@@ -171,15 +179,21 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <!-- Attack Vectors -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Vectors:</strong></td>
-                <td style="border: none; text-align: left;">The following attack vectors were observed (highest bandwidth is listed first): <strong>{', '.join(vectors)}</strong></td>
+                <td style="border: none; text-align: left;">
+                    The following attack vectors were observed, ranked by the peak bandwidth of the largest attack for each type:<br>
+                    {", ".join(
+                        f"<strong>{attack[0]}</strong> ({round(attack[1]['highest_gbps'], 2):g} Gbps)"
+                        for attack in sorted_vectors
+                    )}
+                </td>
             </tr>
 
             <!-- Peak Attack Rate -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Peak Attack Rate:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Throughput per second peaked at <strong>{peak_traffic['bps']} kbps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
-                    Packets per second peaked at <strong>{peak_traffic['pps']} pps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
+                    <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
+                    <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
                 </td>
             </tr>
 
@@ -188,8 +202,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 <td style="border: none; text-align: right;"><strong>Attacked Destinations:</strong></td>
                 <td style="border: none; text-align: left;">
                     Attacks were identified against <strong>{len(attacked_destinations)} destination IP address{'es' if len(attacked_destinations) != 1 else ''}</strong> and <strong>{len(destination_ports)} destination port{'s' if len(destination_ports) != 1 else ''}.</strong><br>
-                    IPs: {", ".join(attacked_destinations)}<br>
-                    Ports: {", ".join(destination_ports)}
+                    Target IPs: {", ".join(attacked_destinations)}<br>
+                    Target Ports: {", ".join(destination_ports)}
                 </td>
             </tr>
 
@@ -197,7 +211,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Sources:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Sampled data includes attacks from at least <strong>{len(attack_sources)} unique source IP addresses</strong><br>
+                    Sampled data includes attacks from <strong>at least {len(attack_sources)} unique source IP addresses</strong><br>
                     <!--{", ".join(attack_sources)}-->
                 </td>
             </tr>"""
@@ -217,9 +231,17 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>TopN Coverage:</strong></td>
                 <td style="border: none; text-align: left;">
-                    Of the <strong>{total_attacks} total attack{'s' if total_attacks != 1 else ''}</strong> observed over the specified time period, this report is filtered based on the <strong>{included_attacks} unique attacks</strong> included in the <strong>Top {topN} bps</strong> and <strong>Top {topN} pps</strong> tables.<br>
-                    These <strong>{included_attacks} attack{'s' if included_attacks != 1 else ''}</strong> represent <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
-                    The <strong>remaining {total_attacks - included_attacks} attack{'s' if (total_attacks - included_attacks) != 1 else ''}</strong> represent <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> of the observed attack packets.
+                This report focuses on the largest attacks observed within the specified time period, filtered by the Top {topN} BPS and PPS tables.<br>
+            """
+            if (total_attacks - included_attacks) > 0:
+                output += f"""
+                        It includes the <strong>{included_attacks} largest attack{'s' if total_attacks > 1 else ''}</strong> out of the <strong>{total_attacks} observed attack{'s' if total_attacks > 1 else ''}</strong>, based on the Top {topN} BPS and Top {topN} PPS rankings.<br>
+                        The{'se' if included_attacks > 1 else ''} <strong>{included_attacks} attack{'s' if included_attacks != 1 else ''}</strong> represent{'s' if included_attacks == 1 else ''} <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
+                        The remaining <strong>{total_attacks - included_attacks} excluded attack{'s' if (total_attacks - included_attacks) != 1 else ''}</strong> represent{'s' if (total_attacks - included_attacks) == 1 else ''} <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> of the observed attack packets.
+                        """
+            else:
+                output += f"All observed attacks are included in this report. <strong>No attacks were excluded.</strong>"
+            output += f"""
                 </td>
             </tr>"""
         except:

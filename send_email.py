@@ -12,9 +12,9 @@ smtp_sender=config.get("Email","smtp_sender","val")
 smtp_password=config.get("Email","smtp_password","val")
 smtp_list = (config.get("Email","smtp_list","val"))
 
-def attach_files(msg, compressed_output):
-    attachment = open(compressed_output, "rb")
-    file_name = os.path.basename(compressed_output)
+def attach_files(msg, output_file):
+    attachment = open(output_file, "rb")
+    file_name = os.path.basename(output_file)
 
     mime_attachment = MIMEBase('application', 'octet-stream')
     mime_attachment.set_payload(attachment.read())
@@ -29,13 +29,7 @@ def attach_files(msg, compressed_output):
     msg.attach(mime_attachment)
     attachment.close()
 
-def email_body():
-    email_body = f'\r\n\r\nAttack Story'
-    if common_globals['unavailable_devices']:
-        email_body += f"\r\n Warning: \r\n\t The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}"                     
-    return email_body
-
-def send_email(compressed_output):
+def send_email(output_file, attack_count, top_pps, top_gbps, htmlSummary):
     update_log("Attempting to send Email") 
     ########## Extract date and time from file name to use in Subject line #########
     #file_name = os.path.basename(compressed_output)  # "EnvName_2024-12-11_11.41.21.tgz"
@@ -51,13 +45,23 @@ def send_email(compressed_output):
     msg = MIMEMultipart()
     msg["From"] = smtp_sender
     msg["To"] = smtp_list
-    #msg["Subject"] = f"Attack Story - {formatted_datetime}"
-    msg["Subject"] = f'Attack Story - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")}'
-    attach_files(msg,compressed_output)
+
+    subject = f'Attack Story - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")} - [{attack_count} Attacks] - '
+    if attack_count > 0:
+        subject += f'[Largest Attacks: {top_pps} PPS {round(top_gbps, 3):g} Gbps]'
     if common_globals['unavailable_devices']:
-        msg["Subject"] += " With Warnings"
-    msg_body=email_body()
+        subject += " With Warnings"
+    msg["Subject"] = subject
+        
+    attach_files(msg,output_file)
+
+    msg_body = f'\r\n\r\n'
+    if common_globals['unavailable_devices']:
+        msg_body += f"<h2>Warning:<\h2> \r\n\t The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}<\h2>\r\n\r\n"
+
+    msg_body += htmlSummary.replace('<div style="line-height: 1.5; text-align: center;">','<div style="line-height: 1.5; text-align: left; width: 95%;">')
     msg.attach(MIMEText(msg_body, 'html'))
+
     try:
         mailserver = smtplib.SMTP(host=smtp_server,port=smtp_server_port)
     except:

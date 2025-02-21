@@ -73,12 +73,26 @@
 
 
 # Version Control
-	v0.17.2 - 18 February 2025 (Steve)
-		Added aggregate line to combined graph
-		DefensePro Name should appear in tables instead of "N/A"
-		Improved html syntax in html_attack_summary
-		Summary text should now only pluralize when appropriate
-		Fixed typo in summary text.
+	v0.18.0 - 21 February 2025 (Steve)
+		Combined Graphs:
+			Added an aggregate line.
+			Appended leading and trailing zeroes to dataset values where they were missing.
+			Added commas to numbers presented in on-hover tooltips.
+			Added title headers to the graphs.
+			Changed graph order: BPS now appears before PPS for consistency.
+			Changed the order of the combined graphs so BPS appears before PPS to match the ordering of the rest of the report.
+		Attack Summary:
+			Improved html syntax.
+			Attack vectors are now sorted by the highest recorded bandwidth for each attack type and will display the peak bandwidth for each.
+			Corrected per-wave attack count reporting.
+			Fixed pluralization issues in summary text.
+			Fixed a typo in summary text.
+		Email:
+			Email subject now includes total attacks, largest attack (Gbps), and largest attack (PPS).
+			Added Attack Summary to email body.
+		Misc Improvements:
+			DefensePro Name should now appear in tables instead of "N/A".
+			Improved Error description when the 'requests' module is missing.
 	v0.17.1 - 6 February 2025 (Steve + Prateek)
 		Added logic to skip if device is not available. 
 			Unavailable devices will be listed in the final report.
@@ -106,13 +120,13 @@
 		The script now outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
 		The contents of './Temp/' will be compressed to './Reports/<environment name>/<environment name>_%Y-%m-%d_%H.%M.%S.zip'
 		<environment name> can be modified using the --environment runtime argument.
-		Added environment name capability to json_launcher.py (example file updated accordingly)
+		Added environment name capability to json_launcher.py (example file updated accordingly).
 		Added 'attack wave' section to Attack Summary. 
-			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General]
-		Corrected hardcoded path in sftp_module.py
-		json_launcher now uses launcher.json file
-		Minor visual improvements
-		Improved logging
+			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General].
+		Corrected hardcoded path in sftp_module.py.
+		json_launcher now uses launcher.json file.
+		Minor visual improvements.
+		Improved logging.
 	v0.16.0 - 19 December 2024 (Egor)
 		Added sending email option (user configurable).
 	v0.15.1 - 14 November 2024 (Steve)
@@ -127,19 +141,19 @@
 		Added '--offline' argument to run the script in offline mode and use data pulled during a previous run. 
 			Only DP-Attack-Story_Report.html will be modified during an --offline run.
 	v0.14.6 - 7 November 2024 (Prateek)
-		Bug Fix related to BDoS lifecycle button
+		Bug Fix related to BDoS lifecycle button.
 	v0.14.5 - 5 November 2024 (Prateek)
 		Bug fix for JSON serializing.
 	v0.14.4 - 5 November 2024 (Prateek)
 		Restructred code for offline running.
-		Modified BPS and PPS table to collect all BDoS data and display it in the collapsible 'BDOS Life Cycle' button
+		Modified BPS and PPS table to collect all BDoS data and display it in the collapsible 'BDOS Life Cycle' button.
 	v0.14.3 - 24 October 2024 (Prateek)
 		Source IP list table fix.
 		Added a table of aggregated sample data. 
 	v0.14.2 - 22 October 2024 (Steve)
 		Rolled back compressed file change.
 	v0.14.1 - 22 October 2024 (Steve)
-		Fixed a typo in common.py
+		Fixed a typo in common.py.
 	v0.14.0 - 22 October 2024 (Steve)
 		Added support for running the script with predefined settings through launcher.json.
 			Vision IP, Username, Password, and RootPassword support using OS Environmental variables. 
@@ -153,8 +167,8 @@
 		Config.ini now includes a Top_N value. Changing this number will change how many attacks are included in reported data.
 		Added 2 pie charts comparing attack types by total bandwidth and packets.
 		Moved Graph legends to top of graphs to accomodate hAxis label.
-		Corrected label on first graph from BPS to KBPS
-		Added Top_N label to top right of output html
+		Corrected label on first graph from BPS to KBPS.
+		Added Top_N label to top right of output html.
 		Fixed a typo in html_data.py.
 	v0.13.0 - 21 October 2024 (Steve)
 		Incorporated a 'Graph' button and a collapsible graph for every row of the attack tables.
@@ -247,8 +261,8 @@
 		Added error handling when entering a time range. Invalid entries will now prompt for a correction.
 		Script will pull DefensePro CLI credentials from Vision instead of prompting user.
 	v0.8.6 - 21 August 2024 (Prateek)
-		added summary that displays attack vector for top n attacks
-		added summary that displays x attacks are over "y" gbps
+		Added summary that displays attack vector for top n attacks.
+		Added summary that displays x attacks are over "y" gbps.
 	v0.8.5 - 21 August 2024 (Steve)
 		Added more robust error handling and reporting to graph operations. 
 		Renamed output html file from graph.html to DP-Attack-Story_Report.html
