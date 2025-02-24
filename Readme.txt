@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.18.1 - 24 February 2025 (Steve)
+		Multiple bugfixes
 	v0.18.0 - 21 February 2025 (Steve)
 		Combined Graphs:
 			Added an aggregate line.
