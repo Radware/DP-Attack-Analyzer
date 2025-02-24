@@ -270,7 +270,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <!-- No Attacks Identified -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attacks Identified:</strong></td>
-                <td style="border: none; text-align: left;"><strong>No</strong> attacks were identified over the specified time period.</td>
+                <td style="border: none; text-align: left;"><strong>No attacks were identified</strong> over the specified time period.</td>
             </tr>
         </table>
     </div>

@@ -329,8 +329,12 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         attack_count = 0
         for dp, data in attack_data.items():
             attack_count += len(data['data'])
-        top_pps = top_by_pps[0][1].get('Max_Attack_Rate_PPS_formatted', 0)
-        top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
+        top_pps = 0
+        top_bps = 0
+        if len(top_by_pps) > 0:
+            top_pps = top_by_pps[0][1].get('Max_Attack_Rate_PPS_formatted', 0)
+        if len(top_by_bps) > 0:
+            top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
         if config.get("Email","send_email","False").upper() == "TRUE":
             send_email.send_email(output_file, attack_count, top_pps, top_bps, htmlSummary)
         if common_globals['unavailable_devices']:
