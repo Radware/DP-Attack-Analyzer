@@ -63,10 +63,8 @@ def run_main_script(args):
     result = subprocess.run(command)
 
     if result.returncode != 0:
-        print(f"Error: main.py failed with return code {result.returncode}")
-        return False
-        #sys.exit(result.returncode)
-    return True
+        print(f"Error: main.py failed with return code {result.returncode}. Exiting json_launcher.py")
+        sys.exit(0)
 
 if __name__ == "__main__":
     # Load JSON data
@@ -74,13 +72,12 @@ if __name__ == "__main__":
 
     # Iterate over each entry in the JSON list and call main.py
     for index, json_entry in enumerate(json_data):
-        print(f"Running main.py for entry {index + 1}/{len(json_data)}...")
+        print(f"Running main.py for entry {index + 1}/{len(json_data)}...", flush=True)
         
         # Build arguments from the current JSON entry
         arguments = build_arguments(json_entry)
 
         # Run the main script with the arguments
-        if not run_main_script(arguments):
-            break
-
+        run_main_script(arguments)
+            
     print("All entries processed successfully.")

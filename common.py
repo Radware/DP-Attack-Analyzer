@@ -10,7 +10,7 @@ script_start_time = datetime.datetime.now()
 common_globals = {'unavailable_devices':[]}
 
 temp_folder = "./Temp/"
-log_file = temp_folder + "Attack-Story.log"
+log_file = temp_folder + "Attack-Analyzer.log"
 if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)
 
@@ -51,7 +51,7 @@ if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?') or arg
     print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
     print("    --environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.")
-    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Story_Report.html")
+    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Analyzer_Report.html")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")
     print("        --hours, -h <number_of_hours>                      Select data from the past X hours.")

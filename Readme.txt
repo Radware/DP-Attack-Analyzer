@@ -1,4 +1,4 @@
-#DP-Attack-Story
+#DP-Attack-Analyzer
 
 # Owners
 
@@ -39,7 +39,7 @@
 			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
 				--environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.
-				--offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in ./Temp/ for generating DP-Attack-Story_Report.html
+				--offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in ./Temp/ for generating DP-Attack-Analyzer_Report.html
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
@@ -73,6 +73,11 @@
 
 
 # Version Control
+	v0.19.0 - 10 March 2025 (Steve)
+		Renamed from DP Attack Story to Attack Analyzer.
+		Small improvements to email subject.
+		DefensePro names included in list of DefensePro IPs at the top of the report.
+		json_launcher.py updated to workaround an observed docker infinite loop issue.
 	v0.18.1 - 24 February 2025 (Steve)
 		Multiple bugfixes
 	v0.18.0 - 21 February 2025 (Steve)
@@ -140,7 +145,7 @@
 		Added Attack Summary section to the final attack report.
 		Pie charts now only include data from topN attacks.
 		Added '--offline' argument to run the script in offline mode and use data pulled during a previous run. 
-			Only DP-Attack-Story_Report.html will be modified during an --offline run.
+			Only DP-Attack-Analyzer_Report.html will be modified during an --offline run.
 	v0.14.6 - 7 November 2024 (Prateek)
 		Bug Fix related to BDoS lifecycle button.
 	v0.14.5 - 5 November 2024 (Prateek)
@@ -266,7 +271,7 @@
 		Added summary that displays x attacks are over "y" gbps.
 	v0.8.5 - 21 August 2024 (Steve)
 		Added more robust error handling and reporting to graph operations. 
-		Renamed output html file from graph.html to DP-Attack-Story_Report.html
+		Renamed output html file from graph.html to DP-Attack-Analyzer_Report.html
 	v0.8.4 - 21 August 2024 (Prateek)
 		Added logic to ignore EAAF events.
 	v0.8.3 - 15 August 2024 (Steve)
