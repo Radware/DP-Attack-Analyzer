@@ -65,8 +65,11 @@ if __name__ == '__main__':
                 args_used = True
             else:
                 if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
-                    policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
-                    policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                    try:
+                        policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                        policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                    except:
+                        policy_names = "<unavailable>"
                     print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
                     print(f"    Available policies: ")
                     print(f"        {policy_names}")
@@ -169,7 +172,7 @@ Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
-DPs: {', '.join(device_ips)}
+DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device)['name'],'N/A')} ({device})" for device in device_ips)}
 Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
         
@@ -287,7 +290,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += endHTML
 
         update_log("Creating output file.")
-        html_file_path = os.path.join(temp_folder, 'DP-Attack-Story_Report.html')
+        html_file_path = os.path.join(temp_folder, 'DP-Attack-Analyzer_Report.html')
         with open(html_file_path, 'w') as file:
             file.write(finalHTML)
         update_log(f"Graphs and metrics saved to {html_file_path}")

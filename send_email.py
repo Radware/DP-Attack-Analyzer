@@ -46,11 +46,13 @@ def send_email(output_file, attack_count, top_pps, top_gbps, htmlSummary):
     msg["From"] = smtp_sender
     msg["To"] = smtp_list
 
-    subject = f'Attack Story - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")} - [{attack_count} Attacks] - '
-    if attack_count > 0:
-        subject += f'[Largest Attacks: {top_pps} PPS {round(top_gbps, 3):g} Gbps]'
+    subject = f'Attack Analyzer - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")}'
     if common_globals['unavailable_devices']:
-        subject += " With Warnings"
+        subject += " - [With Warnings]"
+    subject += ' - [{attack_count} Attacks]'
+    if attack_count > 0:
+        subject += f' - [Largest Attacks: {top_pps} PPS {round(top_gbps, 3):g} Gbps]'
+
     msg["Subject"] = subject
         
     attach_files(msg,output_file)
