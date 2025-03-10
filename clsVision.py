@@ -269,7 +269,7 @@ class clsVision:
         if r.status_code == 200:
             return r.json()
         else:
-            update_log(f"Error getting device data for {DeviceIP}")
+            update_log(f"Error getting device data for {DeviceIP} - {r}")
             raise Exception(f"Error getting device data for {DeviceIP} - {r}")
 
     def getAttackReports(self, DeviceIP, StartTime, EndTime, filter_json=None):
