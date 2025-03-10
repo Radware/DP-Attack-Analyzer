@@ -64,7 +64,9 @@ def run_main_script(args):
 
     if result.returncode != 0:
         print(f"Error: main.py failed with return code {result.returncode}")
-        sys.exit(result.returncode)
+        return False
+        #sys.exit(result.returncode)
+    return True
 
 if __name__ == "__main__":
     # Load JSON data
@@ -73,11 +75,12 @@ if __name__ == "__main__":
     # Iterate over each entry in the JSON list and call main.py
     for index, json_entry in enumerate(json_data):
         print(f"Running main.py for entry {index + 1}/{len(json_data)}...")
-
+        
         # Build arguments from the current JSON entry
         arguments = build_arguments(json_entry)
 
         # Run the main script with the arguments
-        run_main_script(arguments)
+        if not run_main_script(arguments):
+            break
 
     print("All entries processed successfully.")

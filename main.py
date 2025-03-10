@@ -110,6 +110,8 @@ if __name__ == '__main__':
 
         # Calculate top BPS and PPS using html_data.get_top_n
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
+        for attack in top_by_bps + top_by_pps:
+            attack[1]['Device Name'] = dp_list_ip.get(attack[1].get('Device IP', 'N/A'),'N/A')['name']
         with open(temp_folder + 'TopMetrics.json', 'w') as file:
             json.dump({
                 'top_by_bps': top_by_bps,
@@ -226,9 +228,10 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         finalHTML = html_header.getHeader(statsForHeader) + html_graphs.graphPrerequesites()
 
-        finalHTML += "\n<h2>Attack Summary</h2>"
         update_log("Generating attack summary")
-        finalHTML += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids)
+        htmlSummary = '\n<h2 style="text-align: center;">Attack Summary</h2>'
+        htmlSummary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids) 
+        finalHTML += htmlSummary
 
         #Create the two graphs at the top of the HTML file
         finalHTML += "\n<h2>Traffic Bandwidth</h2>"
@@ -323,9 +326,17 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         ##############################End of Parse_Data Section##############################
 
         ##############################Send email ############################################
-
-        if config.get("Email","send_email","val").upper() == "TRUE":
-            send_email.send_email(output_file)
+        attack_count = 0
+        for dp, data in attack_data.items():
+            attack_count += len(data['data'])
+        top_pps = 0
+        top_bps = 0
+        if len(top_by_pps) > 0:
+            top_pps = top_by_pps[0][1].get('Max_Attack_Rate_PPS_formatted', 0)
+        if len(top_by_bps) > 0:
+            top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
+        if config.get("Email","send_email","False").upper() == "TRUE":
+            send_email.send_email(output_file, attack_count, top_pps, top_bps, htmlSummary)
         if common_globals['unavailable_devices']:
             update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")
         else:

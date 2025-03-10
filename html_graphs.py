@@ -263,6 +263,53 @@ def createChart(Title, myData):
     """
     return html_content
 
+def pad_with_zeros(myData):
+    for key, dataset in myData.items():
+        data = dataset.get("data", [])
+        
+        if len(data) > 1:  # Only process if more than one row exists
+            # Ensure sorting by timestamp before processing
+            sorted_data = sorted(data, key=lambda x: x["row"]["timeStamp"])
+            
+            # Check if the first row has Bps: 0 and Pps: 0 or time difference is too small
+            first_row = sorted_data[0]["row"]
+            second_row_time = sorted_data[1]["row"]["timeStamp"] if len(sorted_data) > 1 else None
+            if first_row["Bps"] != 0 or first_row["Pps"] != 0 or (second_row_time and (second_row_time - first_row["timeStamp"] < 7500)):
+                # Create a new row with timestamp 15 seconds earlier
+                new_row = {
+                    "row": {
+                        "timeStamp": first_row["timeStamp"] - 15000,
+                        "Bps": 0,
+                        "Pps": 0
+                    }
+                }
+                
+                # Insert at the beginning
+                sorted_data.insert(0, new_row)
+
+            # Check if the last row has Bps: 0 and Pps: 0 or time difference is too small
+            last_row = sorted_data[-1]["row"]
+            second_to_last_time = sorted_data[-2]["row"]["timeStamp"] if len(sorted_data) > 1 else None
+            if last_row["Bps"] != 0 or last_row["Pps"] != 0 or (second_to_last_time and (last_row["timeStamp"] - second_to_last_time < 7500)):
+                # Create a new row with timestamp 15 seconds later
+                new_row = {
+                    "row": {
+                        "timeStamp": last_row["timeStamp"] + 15000,
+                        "Bps": 0,
+                        "Pps": 0
+                    }
+                }
+                
+                # Append at the end
+                sorted_data.append(new_row)
+            
+            # Update the dataset with sorted and modified data
+            dataset["data"] = sorted_data
+    
+    return myData
+
+
+
 def createCombinedChart(Title, myData):
     """
     Build HTML+JS to render a combined Google Chart with PPS/BPS lines,
@@ -288,24 +335,52 @@ def createCombinedChart(Title, myData):
     out_datasets = {}
     metadata_map = {}
 
+    pad_with_zeros(myData)
+
     for dataset_name, dataset_data in myData.items():
-        cur_dataset_pps = []
-        cur_dataset_bps = []
+        cur_dataset_pps = {}
+        cur_dataset_bps = {}
         rows = dataset_data['data']
         metadata_map[dataset_name] = dataset_data.get('metadata', {})
 
         for row in rows:
             cur_row = row['row']
             timestamp = round(cur_row['timeStamp'] / 15000) * 15000  # Round to the nearest 15 seconds
-            cur_row_pps = [timestamp, cur_row['Pps']]
-            cur_row_bps = [timestamp, cur_row['Bps']]
-            cur_dataset_pps.append(cur_row_pps)
-            cur_dataset_bps.append(cur_row_bps)
+            pps_value = cur_row['Pps']
+            bps_value = cur_row['Bps']
 
-        sorted_dataset_pps = sorted(cur_dataset_pps, key=lambda x: x[0])
-        sorted_dataset_bps = sorted(cur_dataset_bps, key=lambda x: x[0])
+            # Keep the higher value for duplicate timestamps
+            if timestamp in cur_dataset_pps:
+                cur_dataset_pps[timestamp] = max(cur_dataset_pps[timestamp], pps_value)
+                cur_dataset_bps[timestamp] = max(cur_dataset_bps[timestamp], bps_value)
+            else:
+                cur_dataset_pps[timestamp] = pps_value
+                cur_dataset_bps[timestamp] = bps_value
+
+        # Convert the dictionaries to sorted lists
+        sorted_dataset_pps = sorted(cur_dataset_pps.items())
+        sorted_dataset_bps = sorted(cur_dataset_bps.items())
+        
         out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
         out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
+    
+    #Create Aggregate datasets
+    #aggregate_data_pps = {}
+    # aggregate_data_bps = {}
+    # for dataset_name, dataset_data in out_datasets.items():
+    #     for row in dataset_data:
+    #         timestamp = row[0]
+    #         value = row[1]
+    #         if '_pps' in dataset_name:
+    #             aggregate_data_pps[timestamp] = aggregate_data_pps.get(timestamp,0) + value
+    #         else:
+    #             aggregate_data_bps[timestamp] = aggregate_data_bps.get(timestamp,0) + value
+
+    # aggregate_pps_list = sorted([[key, value] for key, value in aggregate_data_pps.items()], key=lambda x: x[0])
+    # aggregate_bps_list = sorted([[key, value] for key, value in aggregate_data_bps.items()], key=lambda x: x[0])
+    # out_datasets['Aggregate_pps'] = aggregate_pps_list 
+    # out_datasets['Aggregate_bps'] = aggregate_bps_list
+    metadata_map['Aggregate'] = {}
 
     sorted_keys = sorted(
         out_datasets.keys(),
@@ -316,8 +391,8 @@ def createCombinedChart(Title, myData):
 
     out_html = f"""
     <div id="checkboxes_{Title}"></div>
-    <div id="chart_div_pps_{Title}" style="width: 100%; height: 500px;"></div>
     <div id="chart_div_bps_{Title}" style="width: 100%; height: 500px;"></div>
+    <div id="chart_div_pps_{Title}" style="width: 100%; height: 500px;"></div>
 
     <script type="text/javascript">
         (function() {{
@@ -342,15 +417,18 @@ def createCombinedChart(Title, myData):
             // Prepare data for Google Charts
             function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
                 const allTimestamps = new Set();
+                console.log("3.1.1");
                 Object.values(filteredDataset).forEach(dataset => {{
                     dataset.forEach(dataPoint => {{
                         allTimestamps.add(dataPoint[0]);
                     }});
                 }});
+                console.log("3.1.2");
                 const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                console.log("3.1.3");
                 const dataArray = [];
                 const datasetNames = Object.keys(filteredDataset);
-            
+                console.log("3.1.4");
                 // Add headers, including a tooltip column for each dataset
                 const headerRow = ['Timestamp'];
                 datasetNames.forEach(name => {{
@@ -362,7 +440,7 @@ def createCombinedChart(Title, myData):
                     }}); // Tooltip column
                 }});
                 dataArray.push(headerRow);
-            
+                console.log("3.1.5");
                 // Populate rows with data and tooltips
                 sortedTimestamps.forEach(timestamp => {{
                     const row = [new Date(timestamp)];
@@ -372,8 +450,7 @@ def createCombinedChart(Title, myData):
                         row.push(value); // Data value
                         if (value !== null) {{
                             const metadata = metadataMap_{Title}[datasetName.replace('_pps', '').replace('_bps', '')];
-                            //row.push(`<div><strong>Value:</strong> ${{value}} ${{JSON.stringify(metadata)}}</div>`); // Tooltip
-                            row.push(`<div style="margin-left: 20px;"><strong>Value:</strong> ${{value}} <br>${{Object.entries(metadata).map(([key, value]) => `${{key}}: ${{value}}`).join('<br>')}}</div>`); // Tooltip
+                            row.push(`<div style="margin-left: 20px;"><strong>Value:</strong> ${{value.toLocaleString?.() || value}} <br>${{Object.entries(metadata).map(([key, value]) => `${{key}}: ${{value}}`).join('<br>')}}</div>`); // Tooltip
                             
                         }} else {{
                             row.push(null)
@@ -389,9 +466,15 @@ def createCombinedChart(Title, myData):
             function updateChart_{Title}(type) {{
                 let chartData, chart, chartDiv;
                 if (type === 'pps') {{
+                    console.log("3.1")
+                    console.log(prepareDataForGoogleCharts_{Title})
+                    console.log(filteredDataset_pps_{Title})
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_pps_{Title});
+                    console.log("3.2")
                     chartDiv = document.getElementById('chart_div_pps_{Title}');
+                    console.log("3.3")
                     chart = new google.visualization.LineChart(chartDiv);
+                    console.log("3.4")
                 }} else if (type === 'bps') {{
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_bps_{Title});
                     chartDiv = document.getElementById('chart_div_bps_{Title}');
@@ -399,6 +482,7 @@ def createCombinedChart(Title, myData):
                 }}
                 const data = google.visualization.arrayToDataTable(chartData);
                 const options = {{
+                    title: type.toUpperCase(),
                     curveType: 'function',
                     legend: {{
                         position: 'top',
@@ -423,6 +507,37 @@ def createCombinedChart(Title, myData):
                 chart.draw(data, options);
             }}
 
+            function update_aggregate_data_{Title}(data) {{
+                console.log("aggregating");
+                if ("Aggregate" in data) {{
+                    delete data["Aggregate"];
+                    console.log("Existing Aggregate data removed.");
+                }}
+                let aggregated = {{}};
+
+                for (let key in data) {{
+                    data[key].forEach(entry => {{
+                        let timestamp = entry[0];
+                        let value = entry[1];
+
+                        if (!aggregated[timestamp]) {{
+                            aggregated[timestamp] = 0;
+                        }}
+                        
+                        aggregated[timestamp] += value;
+                    }});
+                }}
+                // Convert aggregated object to array format
+                let aggregatedArray = Object.entries(aggregated).map(([timestamp, value]) => [Number(timestamp), value]);
+
+                // Convert `data` into an array of entries and rebuild in order
+                let entries = Object.entries(data);
+                entries.unshift(["Aggregate", aggregatedArray]); // Append Aggregate last
+
+                Object.keys(data).forEach(key => delete data[key]); // Clear the original object
+                Object.assign(data, Object.fromEntries(entries)); // Rebuild with correct order
+            }}
+
             // Load Google Charts and set up event listeners
             google.charts.load('current', {{ packages: ['corechart'] }});
             google.charts.setOnLoadCallback(() => {{
@@ -430,17 +545,27 @@ def createCombinedChart(Title, myData):
                     checkbox.addEventListener('change', function() {{
                         const baseName = checkbox.value;
                         if (checkbox.checked) {{
+                            console.log("1");
                             filteredDataset_pps_{Title}[baseName + '_pps'] = datasets_{Title}[baseName + '_pps'];
+                            update_aggregate_data_{Title}(filteredDataset_pps_{Title});
                             filteredDataset_bps_{Title}[baseName + '_bps'] = datasets_{Title}[baseName + '_bps'];
+                            update_aggregate_data_{Title}(filteredDataset_bps_{Title});
+                            console.log("2");
                         }} else {{
                             delete filteredDataset_pps_{Title}[baseName + '_pps'];
+                            update_aggregate_data_{Title}(filteredDataset_pps_{Title});
                             delete filteredDataset_bps_{Title}[baseName + '_bps'];
+                            update_aggregate_data_{Title}(filteredDataset_bps_{Title});
                         }}
+                        console.log("3")
                         updateChart_{Title}('pps'); // Update PPS chart
+                        console.log("4")
                         updateChart_{Title}('bps'); // Update BPS chart
+                        console.log("5")
                     }});
                     checkbox.checked = true;
                     checkbox.dispatchEvent(new Event('change'));
+                    console.log("6")
                 }});
             }});
         }})();

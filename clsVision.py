@@ -11,6 +11,7 @@ try:
     import requests
 except ImportError:
     print("The python module 'requests' is not installed. Please install it by running: pip install requests")
+    print("You can install all required modules using: pip install requests paramiko pysftp")
     exit()
 
 try:
