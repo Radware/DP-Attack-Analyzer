@@ -385,12 +385,11 @@ def calculate_attack_metrics(categorized_logs):
             elif "Entering state 0" in state_description:
                 if last_state_6 and next_state_after_6:
                     break
-
         first_state_2 = state_2_times[0] if state_2_times else None
+        first_state_4 = state_4_times[0] if state_4_times else None
         last_state_4 = state_4_times[-1] if state_4_times else None
         first_time = datetime.strptime(entries[0][0], fmt)
         last_time = datetime.strptime(entries[-1][0], fmt)
-
         if state_6_times and state_6_times[0] == first_time:
             # Burst attack detected
             attack_time = last_time - first_time
@@ -415,7 +414,7 @@ def calculate_attack_metrics(categorized_logs):
 
             final_fp_time = None
             if last_state_6 and last_state_4:
-                final_fp_time = last_state_6 - last_state_4
+                final_fp_time = last_state_6 - first_state_4
             elif not state_6_transition:
                 final_fp_time = "Final footprint not formed"
 
