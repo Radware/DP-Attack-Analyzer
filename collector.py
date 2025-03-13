@@ -2,6 +2,7 @@ import time
 import json
 import os
 import datetime
+import ipaddress
 
 from clsVision import *
 from common import *
@@ -362,6 +363,7 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
     # Combine BPS and PPS sample data, deduplicating them
     deduplicated_sample_data = deduplicate_sample_data(all_sample_data_bps + all_sample_data_pps)
 
+    deduplicated_sample_data.sort(key=lambda x: ipaddress.ip_address(x["sourceAddress"]))
     # Ensure the output directory exists
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)

@@ -327,8 +327,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     # Generate HTML content for combined unique IPs as a table
     html_content += """
     Unique Sample data and Source IP functions: 
-    <button onclick="toggleTable()">Show Source IP Table</button>
-    <button onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
+    <button id="toggleButton1" onclick="toggleTable()">Show Source IP Table</button>
+    <button id="toggleButton2" onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
 
     <!-- Parent container for the two tables -->
     <div style="display: flex; gap: 20px;">
@@ -419,12 +419,28 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     function toggleTable() {
         var tableContainer = document.getElementById("ipTableContainer");
-        tableContainer.style.display = (tableContainer.style.display === "block") ? "none" : "block";
+        var toggleButton = document.getElementById("toggleButton1");
+        
+        if (tableContainer.style.display === "block") {
+            tableContainer.style.display = "none";
+            toggleButton.innerText = "Show Source IP Table";
+        } else {
+            tableContainer.style.display = "block";
+            toggleButton.innerText = "Hide Source IP Table";
+        }
     }
 
     function toggleCombinedSamples() {
         var combinedSampleContainer = document.getElementById("combinedSampleContainer");
-        combinedSampleContainer.style.display = (combinedSampleContainer.style.display === "block") ? "none" : "block";
+        var toggleButton = document.getElementById("toggleButton2");
+
+        if (combinedSampleContainer.style.display === "block") {
+            combinedSampleContainer.style.display = "none";
+            toggleButton.innerText = "Show Aggregated Sample Data";
+        } else {
+            combinedSampleContainer.style.display = "block";
+            toggleButton.innerText = "Hide Aggregated Sample Data";
+        }
     }
     </script>
     """

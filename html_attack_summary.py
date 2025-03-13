@@ -188,9 +188,9 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 </td>
             </tr>
 
-            <!-- Peak Attack Rate -->
+            <!-- Peak Traffic Rate -->
             <tr style="border: none;">
-                <td style="border: none; text-align: right;"><strong>Peak Attack Rate:</strong></td>
+                <td style="border: none; text-align: right;"><strong>Peak Traffic Rate:</strong></td>
                 <td style="border: none; text-align: left;">
                     <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
                     <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>

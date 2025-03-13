@@ -73,6 +73,10 @@
 
 
 # Version Control
+	v0.20.0 - 13 March 2025 (Steve)
+		Added IP Reputation lookup capability
+		Sample IPs will now be sorted
+		"Show ____" buttons text now change to "Hide ____" after clicking.
 	v0.19.0 - 10 March 2025 (Steve)
 		Renamed from DP Attack Story to Attack Analyzer.
 		Small improvements to email subject.

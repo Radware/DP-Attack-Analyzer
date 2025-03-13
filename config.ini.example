@@ -7,6 +7,14 @@ rootpassword = radware
 [General]
 Top_N = 10
 ExcludeFilters = Memcached-Server-Reflect
+# Set to true to collect IP information from https://www.abuseipdb.com/
+use_abuseipdb = False
+# To obtain an API key for abuseipdb, register to https://www.abuseipdb.com/. API key can be found under https://www.abuseipdb.com/account/api (free tier upto 1000 queries per day)
+abuseipdb_api_key= 1234
+# Set to true to collect IP information from https://www.ipqualityscore.com
+use_ipqualityscore = False
+# To obtain an API key for ipqualityscore, register to https://www.ipqualityscore.com. API key can be found under https://www.ipqualityscore.com/user/settings (free tier limit is 5000 per month as of 2/9/2024)
+ip_quality_score_api_key = 1234
 
 [PreviousRun]
 epoch_from_time = 1727907868000

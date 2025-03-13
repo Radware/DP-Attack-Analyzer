@@ -111,6 +111,10 @@ class clsConfig():
         if isinstance(value, str) and value.startswith('$'):
             env_var = value[1:]
             return os.getenv(env_var, value)  # Use the environment variable, fallback to original if not found
+        if value.strip().upper() == 'TRUE':
+            value = True
+        elif value.strip().upper() == 'FALSE':
+            value = False
         return value
         
     def set(self, section, option, value):

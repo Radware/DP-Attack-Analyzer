@@ -13,6 +13,7 @@ import html_attack_summary
 import html_data
 import html_graphs
 import html_header
+import html_ip_reputation
 import sftp_module
 import send_email
 
@@ -258,6 +259,10 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, topN, threshold_gbps=1)
         finalHTML += attackdataHTML 
 
+        #add a button to popup IP reputation info when clicked.
+        if config.get("General","use_abuseipdb", False) or config.get("General","use_ipqualityscore", False):
+            finalHTML += html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
+
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
@@ -338,7 +343,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             top_pps = top_by_pps[0][1].get('Max_Attack_Rate_PPS_formatted', 0)
         if len(top_by_bps) > 0:
             top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
-        if config.get("Email","send_email","False").upper() == "TRUE":
+        if config.get("Email","send_email",False):
             send_email.send_email(output_file, attack_count, top_pps, top_bps, htmlSummary)
         if common_globals['unavailable_devices']:
             update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")
