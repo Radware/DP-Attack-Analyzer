@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.19.1 - 13 March 2025 (Prateek)
+		Modified the logic to calculate "Time taken to optimize and create the final footprint" to avoid negative values. 
 	v0.19.0 - 10 March 2025 (Steve)
 		Renamed from DP Attack Story to Attack Analyzer.
 		Small improvements to email subject.
