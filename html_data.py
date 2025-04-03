@@ -120,7 +120,10 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
                     <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')">BDOS Life Cycle</button>
-                    <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
+                        <button type="button" class="collapsible" onclick="" style="flex: 1;">Reputation</button>
+                    </div>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
                 </td>
             </tr>

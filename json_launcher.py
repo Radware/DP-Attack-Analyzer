@@ -63,7 +63,7 @@ def run_main_script(args):
     result = subprocess.run(command)
 
     if result.returncode != 0:
-        print(f"Error: main.py failed with return code {result.returncode}. Exiting json_launcher.py")
+        print(f"Error: main.py failed with return code {result.returncode}. Exiting json_launcher.py", flush=True)
         sys.exit(0)
 
 if __name__ == "__main__":

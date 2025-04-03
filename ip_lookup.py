@@ -15,6 +15,7 @@ except ImportError:
 requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
 enable_proxy = False
 IPQualityScore_limit_reached = False
+AbuseIPDB_limit_reached = False
 
 try:
     with open('reputation_cache.json', encoding='utf-8') as file:
@@ -47,10 +48,16 @@ def get_ip_abuse_data(ip):
     #if the cached time is older than 2 weeks (1209600 seconds), update the cache.
     if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - int(cached.get('AbuseIPDB',{}).get('cachedAt',0)) > 1209600:
         if config.get('General', 'use_abuseipdb', False):
-            abuse_ip_db_response = abuse_ip_db_call(ip)
-            cached['AbuseIPDB'] = abuse_ip_db_response.get("data",{})
-            cached['AbuseIPDB']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
-            write_updates = True
+            global AbuseIPDB_limit_reached
+            if AbuseIPDB_limit_reached == False:
+                try:
+                    abuse_ip_db_response = abuse_ip_db_call(ip)
+                    cached['AbuseIPDB'] = abuse_ip_db_response.get("data",{})
+                    cached['AbuseIPDB']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
+                    write_updates = True
+                except:
+                    cached['AbuseIPDB'] = {'data':{'abuseConfidenceScore':'Error'}}
+                    cached['AbuseIPDB']['cachedAt'] = 0
     else:
         update_log(f"    AbuseIPDB cached data for {ip} is less than 2 weeks old. Using cache")
 

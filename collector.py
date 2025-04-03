@@ -174,13 +174,15 @@ def user_selects_defensePros(v):
         device_list = v.getDPDeviceList()
         #dp_list_ip = {device['managementIp']: device for device in device_list}
         dp_list_ip = {device['managementIp']: device for device in device_list if device['status'] != 'FAILED'}
-        
+
         # Display list of available DefensePros
         #print("Available Defensepros: " + ', '.join(dp_list_ip.keys()))
         print("Available DefensePros: " + ', '.join(f"{dp_list_ip[key]['name']} ({key})" for key in dp_list_ip))
         
         used_args = False
-        while True:
+        loopcount = 0
+        while loopcount < 100:
+            loopcount += 1
             if args:
                 device_entries = args.pop(0).split(',')
                 used_args = True
@@ -189,7 +191,9 @@ def user_selects_defensePros(v):
                     device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
                 else:
                     device_entries = ""
-            if len(device_entries[0]) == 0 and len(device_entries) == 1:
+                    valid_ips = list(dp_list_ip.keys())
+                    break
+            if len(device_entries) == 1 and len(device_entries[0]) == 0:
                 valid_ips = list(dp_list_ip.keys())
                 break
             else:
