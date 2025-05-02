@@ -15,6 +15,7 @@ import html_graphs
 import html_header
 import sftp_module
 import send_email
+from collections import defaultdict
 
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
@@ -105,12 +106,15 @@ if __name__ == '__main__':
             #print(f"Result for {file}: {result}")
         #print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
-        #print(categorized_logs) 
+        state_6_logs = data_parser.extract_state_6_footprints(all_results)
+        #print(state_6_logs) 
         metrics = data_parser.calculate_attack_metrics(categorized_logs)
+        
         for syslog_id in syslog_ids:
-            if syslog_id in metrics:
+            if syslog_id in metrics and syslog_id in state_6_logs:
                 syslog_details[syslog_id].update(metrics[syslog_id])
-
+                syslog_details[syslog_id].update(state_6_logs[syslog_id])
+                #print(syslog_details)
         # Calculate top BPS and PPS using html_data.get_top_n
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         for attack in top_by_bps + top_by_pps:
@@ -124,7 +128,7 @@ if __name__ == '__main__':
             }, file, ensure_ascii=False, indent=4)
 
         bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
-        print(combined_unique_samples)
+        #print(combined_unique_samples)
 
         with open(temp_folder + 'SampleData.json', 'w') as file:
             json.dump({

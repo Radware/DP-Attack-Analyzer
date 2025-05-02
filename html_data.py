@@ -87,6 +87,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
         metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
+        state_6_footprints = details.get('state_6_footprints', 'N/A')
+        formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
         formatted_metrics_summary_bps = "<br>".join(metrics_summary.split('\n'))
 
         # Safely convert Max_Attack_Rate_BPS to float
@@ -135,6 +137,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_bps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                    <tr>
+                        <th>State 6 Footprints {syslog_id}</th>
+                    </tr>                    
+                    <tr>
+                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
                     </tr>
                 </table>
             </td>
@@ -218,6 +226,9 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}"
         metrics_summary = f"{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
         formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
+        state_6_footprints = details.get('state_6_footprints', 'N/A')
+        formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
+
 
 
         # Safely convert Max_Attack_Rate_PPS to float
@@ -265,6 +276,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_pps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                    <tr>
+                        <th>State 6 Footprints {syslog_id}</th>
+                    </tr>
+                    <tr>
+                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No Footprints available'}</td>
                     </tr>
                 </table>
             </td>
