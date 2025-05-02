@@ -176,7 +176,11 @@ Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
+<<<<<<< HEAD
 DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device, {}).get('name', 'N/A'), 'N/A')} ({device})" for device in device_ips)}
+=======
+DPs: {", ".join(f"{dp_list_ip.get(ip, {}).get('name', 'N/A')}({ip})" for ip in device_ips if ip in dp_list_ip) or 'None'}
+>>>>>>> beta
 Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
         

@@ -73,8 +73,14 @@
 
 
 # Version Control
+<<<<<<< HEAD
 	v0.19.3 - 02 May 2025 (Prateek)
 		Add all State 6 / Blocking state footprints to the report
+=======
+	v0.19.2 - 3 April 2025 (Steve)
+		Fixed an issue in resolving DP names in execution details.
+		Sample IPs are now sorted
+>>>>>>> beta
 	v0.19.1 - 13 March 2025 (Prateek)
 		Modified the logic to calculate "Time taken to optimize and create the final footprint" to avoid negative values. 
 	v0.19.0 - 10 March 2025 (Steve)
