@@ -1,3 +1,6 @@
+import html_ip_reputation
+from common import *
+
 def generate_sample_data_section(title, sample_data):
     # Generate a sample data table (used for both BPS and PPS)
     html_content = f"<h2>{title}</h2><table border='1' cellpadding='5' cellspacing='0'>"
@@ -35,6 +38,7 @@ def generate_sample_data_section(title, sample_data):
 
 def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
+    reputation_html_content = ""
     html_content = f"""
         <script>
             function toggleContent(id) {{
@@ -100,6 +104,10 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
         graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
         # Main row
+        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+            reputation_button_html = f"""<button type="button" class="collapsible" onclick="document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_popup').style.display = 'flex';document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_overlay').style.display = 'block';"" style="flex: 1;">Reputation</button>"""
+        else:
+            reputation_button_html = ''
         html_content += f"""
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
@@ -119,12 +127,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button>
                     <div style="display: flex; gap: 4px;">
                         <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
-                        <button type="button" class="collapsible" onclick="" style="flex: 1;">Reputation</button>
+                        {reputation_button_html}
                     </div>
-                    <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
                 </td>
             </tr>
         """
@@ -178,6 +186,14 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                                 <td class="bps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
                             </tr>
                             """
+                        #IP Reputation Popup
+                        #if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                        if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                            ip_data = {}
+                            for sample in samples:
+                                result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                ip_data[sample['sourceAddress']] = result
+                            reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -232,7 +248,11 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
         row_class = ''
         graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
-
+        
+        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+            reputation_button_html = f"""<button type="button" class="collapsible" onclick="document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_popup').style.display = 'flex';document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_overlay').style.display = 'block';"" style="flex: 1;">Reputation</button>"""
+        else:
+            reputation_button_html = ''
         # Main row
         html_content += f"""
             <tr class="{row_class}">
@@ -253,9 +273,13 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')">BDOS Life Cycle</button>
-                    <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_pps_{graph_name}');drawChart_{graph_name}();">Graph</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
+                        {reputation_button_html}
+                    </div>
+                    
                 </td>
             </tr>
         """
@@ -310,6 +334,14 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                                 <td class="pps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
                             </tr>
                             """
+                        #IP Reputation Popup
+                        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                            if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                                ip_data = {}
+                                for sample in samples:
+                                    result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                    ip_data[sample['sourceAddress']] = result
+                                reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -332,7 +364,9 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     Unique Sample data and Source IP functions: 
     <button id="toggleButton1" onclick="toggleTable()">Show Source IP Table</button>
     <button id="toggleButton2" onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
-
+    <button onclick="document.getElementById('reputation_all_popup').style.display = 'flex';document.getElementById('reputation_all_overlay').style.display = 'block';">
+        Show Aggregated Sample Data IP Abuse Database info
+    </button>
     <!-- Parent container for the two tables -->
     <div style="display: flex; gap: 20px;">
         <!-- Source IP Table -->
@@ -448,7 +482,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     </script>
     """
 
-    return html_content
+    return html_content + reputation_html_content
 
 
 

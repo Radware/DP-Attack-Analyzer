@@ -11,6 +11,16 @@ try:
 except ImportError:
     print("The python module 'requests' is not installed. Please install it by running: pip install requests")
 
+if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+    if config.get("Reputation","full_country_names", False):
+        try:
+            import pycountry
+        except ImportError:
+            print("config: [Reputation] full_country_names is set to true and the python module 'pycountry' is not installed.")
+            print("Please install it by running: pip install pycountry")
+            print("pycountry is needed to resolve 2-letter ISO 3166-1 alpha-2 country codes into full country names")
+            exit()
+
 # Suppress insecure request warnings
 requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
 enable_proxy = False
@@ -98,6 +108,15 @@ def get_ip_abuse_data(ip):
             json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
     
     output = reputation_cache[ip]
+    if config.get("Reputation","full_country_names", False):
+        if len(output.get('AbuseIPDB',{}).get('countryCode','')) == 2:
+            country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
+            if country:
+                output['AbuseIPDB']['countryCode'] = country.name
+        if len(output.get('IPQualityScore',{}).get('country_code','')) == 2:
+            country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
+            if country:
+                output['IPQualityScore']['country_code'] = country.name
     filtered_output = {}
     return output
 

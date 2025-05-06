@@ -72,14 +72,12 @@
 				See the included launcher.json.example for a sample.
 
 
-# Version Control
-	v0.20.2 - 6 March 2025 (Steve)
-		Added reputation pie chart.
-	v0.20.1 - 17 April 2025 (Steve)
-		Corrected timestamps in combined graph to UTC.
-	v0.20.0 - 3 April 2025 (Steve)
-		Added IP Reputation lookup capability
+# Version Control		
+	v0.20.0 - 6 March 2025 (Steve)
+		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
+		Added reputation pie chart and Attacker location map.
 		"Show ____" buttons text now swap to "Hide ____" after clicking.
+		Corrected timestamps in combined graph to UTC.
 	v0.19.2 - 3 April 2025 (Steve)
 		Fixed an issue in resolving DP names in execution details.
 		Sample IPs are now sorted

@@ -813,7 +813,6 @@ def createPieCharts(attack_data, top_n_attack_ids):
                 is3D: true,  // Enable 3D chart
                 pieSliceText: 'percentage',  // Show percentages on the chart
                 legend: 'right',  // Include legend (key) on the right
-                chartArea: {{height: '80%'}},
                 slices: {{
                     0: {{offset: 0}},  // Optional slight offset for callout effect
                     1: {{offset: 0}},
@@ -840,11 +839,11 @@ def createPieCharts(attack_data, top_n_attack_ids):
         }}
     </script>
 
-    <div style="display: flex; justify-content: center; mgap: 20px; margin: 0; padding: 0;">
+    <div style="display: flex; justify-content: center; mgap: 20px; margin: 0; padding: 0; height: 400px; overflow: hidden;">
         <div id="bandwidthChart" style="width: 40%; height: 500px; margin: 0; padding: 0;"></div>
         <div id="packetsChart" style="width: 40%; height: 500px; margin: 0; padding: 0;"></div>
     </div>
-    <div style="display: flex; justify-content: center; margin: 0; padding: 0;">
+    <div style="display: flex; justify-content: center; margin: 0; padding: 0; overflow: hidden;">
         <div id="reputationCountryChart" style="margin: 0; padding: 0;"></div>
     </div>
     """

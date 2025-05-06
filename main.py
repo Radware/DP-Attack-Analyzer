@@ -261,7 +261,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += attackdataHTML 
 
         #add a button to popup IP reputation info when clicked.
-        if config.get("General","use_abuseipdb", False) or config.get("General","use_ipqualityscore", False):
+        if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
             finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
 
         #Create dynamic graph combining all attacks into one graph.
@@ -269,17 +269,8 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Generating combined charts")
         #try:
         finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
-        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
-        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
-        #except:
-        #    update_log("Unexpected createCombinedChart() error: ")
-        #    error_message = traceback.format_exc()
-        #    indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
-        #    update_log(indented_error_message)
-
-        #Charts per attack ID are removed from bottom of the output. To readd, uncomment the follwoing line and remove display: none; from the output of createChart()
-        #finalHTML += "\n<h2>Charts per attack ID</h2>"  
         update_log("Generating per-attack graphs")
+
         #Add an individual graph for each attack
         for attackID, data in attack_graph_data.items():
             try:
@@ -305,32 +296,11 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Compressing Output")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        # with tarfile.open(output_file, "w:gz") as tar:
-        #     for item in os.listdir(temp_folder):  # Iterate over the contents of temp_folder
-        #         item_path = os.path.join(temp_folder, item)
-        #         tar.add(item_path, arcname=item)  # Add each item with its base name
-        #     print(f"{temp_folder} has been compressed to {output_file}")
         with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zipf:
             for item in os.listdir(temp_folder): 
                 item_path = os.path.join(temp_folder, item)
                 zipf.write(item_path, arcname=item)
             update_log(f"{temp_folder} has been compressed to {output_file}")
-        # if os.path.exists(temp_folder):
-        #     # Remove all files in the output folder
-        #     for filename in os.listdir(temp_folder):
-        #         file_path = os.path.join(temp_folder, filename)
-        #         try:
-        #             if os.path.isfile(file_path):
-        #                 os.unlink(file_path)
-        #         except Exception as e:
-        #             update_log(f"Failed to delete {file_path}. Reason: {e}")
-        #     try:
-        #         os.rmdir(temp_folder)
-        #         print(f"{temp_folder} has been deleted.")
-        #     except FileNotFoundError:
-        #         print(f"{temp_folder} does not exist.")
-        #     except OSError:
-        #         print(f"{temp_folder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################
 
