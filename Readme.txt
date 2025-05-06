@@ -73,10 +73,16 @@
 
 
 # Version Control
-	v0.20.0 - 13 March 2025 (Steve)
+	v0.20.2 - 6 March 2025 (Steve)
+		Added reputation pie chart.
+	v0.20.1 - 17 April 2025 (Steve)
+		Corrected timestamps in combined graph to UTC.
+	v0.20.0 - 3 April 2025 (Steve)
 		Added IP Reputation lookup capability
-		Sample IPs will now be sorted
-		"Show ____" buttons text now change to "Hide ____" after clicking.
+		"Show ____" buttons text now swap to "Hide ____" after clicking.
+	v0.19.2 - 3 April 2025 (Steve)
+		Fixed an issue in resolving DP names in execution details.
+		Sample IPs are now sorted
 	v0.19.0 - 10 March 2025 (Steve)
 		Renamed from DP Attack Story to Attack Analyzer.
 		Small improvements to email subject.

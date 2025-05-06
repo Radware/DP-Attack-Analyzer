@@ -262,7 +262,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         #add a button to popup IP reputation info when clicked.
         if config.get("General","use_abuseipdb", False) or config.get("General","use_ipqualityscore", False):
-            finalHTML += html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
+            finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
 
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"

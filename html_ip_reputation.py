@@ -116,14 +116,55 @@ def getIpReputationHTML(ip_sample_data):
         ip_data[entry['sourceAddress']] = result
 
     included_columns = [
-        "AbuseIPDB_data_abuseConfidenceScore",
-        "AbuseIPDB_data_countryCode",
-        "AbuseIPDB_data_domain",
-        "AbuseIPDB_data_isp",
+        "AbuseIPDB_abuseConfidenceScore",
+        "AbuseIPDB_countryCode",
+        "AbuseIPDB_domain",
+        "AbuseIPDB_isp",
         "IPQualityScore_fraud_score",
         "IPQualityScore_country_code",
         "IPQualityScore_host",
         "IPQualityScore_ISP"
     ]
-    html_content = generate_html_table(ip_data,included_columns)
+    html_content = generate_html_table(ip_data, included_columns)
+
+    #Create country attacker count pie chart
+    countries = {}
+    for ip, data in ip_data.items():
+        country_code = data.get('AbuseIPDB', {}).get('countryCode') or \
+            data.get('IPQualityScore', {}).get('country_code') or \
+            "Unknown"
+        countries[country_code] = countries.get(country_code, 0) + 1
+    
+    country_data = sorted(countries.items(), key=lambda x: x[1], reverse=True)
+    chart_rows = ",\n                ".join([f"['{country}', {count}]" for country, count in country_data])
+    chart_name = "reputationCountryChart"
+    chart_title = "Attacker Country Distribution"
+
+    html_content += f"""
+        <script>
+        google.charts.setOnLoadCallback(drawReputationPieChart);
+        function drawReputationPieChart() {{
+            var {chart_name}Data = google.visualization.arrayToDataTable([
+                ['Country', 'Attack Count'],
+                {chart_rows}
+            ]);
+
+            var options = {{
+                title: '{chart_title}',
+                is3D: true,
+                pieSliceText: 'percentage',
+                legend: 'right',
+                slices: {{
+                    0: {{offset: 0.1}},
+                    1: {{offset: 0.05}},
+                    2: {{offset: 0.05}}
+                }}
+            }};
+            document.getElementById('{chart_name}').style="width: 40%; height: 500px; margin: 0; padding: 0;"
+            var {chart_name} = new google.visualization.PieChart(document.getElementById('{chart_name}'));
+            {chart_name}.draw({chart_name}Data, options);
+        }}
+        </script>
+        """
     return html_content
+

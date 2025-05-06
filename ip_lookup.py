@@ -26,6 +26,7 @@ except FileNotFoundError:
 
 update_log("Pruning stale cached ip reputation data")
 now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+ips_to_prune = []
 for ip in reputation_cache.keys():
     if now - reputation_cache[ip].get('AbuseIPDB',{}).get('cachedAt',99999999999) > 2419200 :
         update_log(f"    {ip} - AbuseIPDB is >4 weeks stale. Pruning.")
@@ -38,6 +39,9 @@ for ip in reputation_cache.keys():
         reputation_cache[ip].pop('IPQualityScore')
     if reputation_cache[ip].get('AbuseIPDB',False) == False and reputation_cache[ip].get('IPQualityScore',False) == False:
         update_log(f"    {ip} - all data pruned. Removing entry.")
+        ips_to_prune.append(ip)
+for ip in ips_to_prune:
+    if ip in reputation_cache:
         del reputation_cache[ip]
 with open('reputation_cache.json', 'w', encoding='utf-8') as file:
     json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
