@@ -108,16 +108,16 @@ def get_ip_abuse_data(ip):
             json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
     
     output = reputation_cache[ip]
-    if config.get("Reputation","full_country_names", False):
-        if len(output.get('AbuseIPDB',{}).get('countryCode','')) == 2:
-            country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
-            if country:
-                output['AbuseIPDB']['countryCode'] = country.name
-        if len(output.get('IPQualityScore',{}).get('country_code','')) == 2:
-            country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
-            if country:
-                output['IPQualityScore']['country_code'] = country.name
-    filtered_output = {}
+    if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
+        if config.get("Reputation","full_country_names", False):
+            if len(output.get('AbuseIPDB',{}).get('countryCode','')) == 2:
+                country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
+                if country:
+                    output['AbuseIPDB']['countryCode'] = country.name
+            if len(output.get('IPQualityScore',{}).get('country_code','')) == 2:
+                country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
+                if country:
+                    output['IPQualityScore']['country_code'] = country.name
     return output
 
 def abuse_ip_db_call(ipAddress):
