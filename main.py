@@ -261,6 +261,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += attackdataHTML 
 
         #add a button to popup IP reputation info when clicked.
+        update_log("Processing IP Reputation")
         if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
             finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
 

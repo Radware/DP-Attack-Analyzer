@@ -23,7 +23,7 @@ if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", 
 
 # Suppress insecure request warnings
 requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
-enable_proxy = False
+enable_proxy = config.get('Reputation', 'use_proxy', False)
 IPQualityScore_limit_reached = False
 AbuseIPDB_limit_reached = False
 
@@ -61,7 +61,7 @@ def get_ip_abuse_data(ip):
     write_updates = False
     #if the cached time is older than 2 weeks (1209600 seconds), update the cache.
     if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - int(cached.get('AbuseIPDB',{}).get('cachedAt',0)) > 1209600:
-        if config.get('General', 'use_abuseipdb', False):
+        if config.get('Reputation', 'use_abuseipdb', False):
             global AbuseIPDB_limit_reached
             if AbuseIPDB_limit_reached == False:
                 try:
@@ -76,7 +76,7 @@ def get_ip_abuse_data(ip):
         update_log(f"    AbuseIPDB cached data for {ip} is less than 2 weeks old. Using cache")
 
     if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - cached.get('IPQualityScore',{}).get('cachedAt',0) > 1209600:
-        if config.get('General', 'use_ipqualityscore', False):
+        if config.get('Reputation', 'use_ipqualityscore', False):
             global IPQualityScore_limit_reached
             if IPQualityScore_limit_reached == False:
                 try:
@@ -122,7 +122,7 @@ def get_ip_abuse_data(ip):
 
 def abuse_ip_db_call(ipAddress):
     # Call to https://api.abuseipdb.com
-    key = config.get('General', 'abuseipdb_api_key', '') 
+    key = config.get('Reputation', 'abuseipdb_api_key', '') 
     if key != '' and key != None:
         url = 'https://api.abuseipdb.com/api/v2/check'
 
@@ -137,8 +137,8 @@ def abuse_ip_db_call(ipAddress):
         }
         
         proxy = {
-            'http': 'http://your_proxy_url',
-            'https': 'https://your_proxy_url'
+            'http': config.get('Reputation', 'http_proxy_address', 'http://your_proxy_url'),
+            'https': config.get('Reputation', 'https_proxy_address', 'https://your_proxy_url')
         }
         update_log(f"  Querying api.abuseipdb.com for {ipAddress}")
         if enable_proxy:
@@ -152,11 +152,12 @@ def abuse_ip_db_call(ipAddress):
 
         return decodedResponse
     else:
+        update_log('Error: Missing abuseipdb API Key')
         return 'Missing abuseipdb API Key'
 
 
 def ip_quality_score_call(ip):
-    key = config.get('General', 'ip_quality_score_api_key', '') 
+    key = config.get('Reputation', 'ip_quality_score_api_key', '') 
     if key != '' and key != None:
         # Call to https://ipqualityscore.com
         url = f'https://ipqualityscore.com/api/json/ip/{key}/{ip}'
@@ -174,6 +175,7 @@ def ip_quality_score_call(ip):
             update_log(f"Error: {response.status_code}")
             return({"success": False})
     else:
+        update_log('Missing ip_quality_score API Key')
         return {'success': False, 'message':'Missing ip_quality_score API Key'}
 
 def parse_data_create_report():

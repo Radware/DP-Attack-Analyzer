@@ -95,6 +95,12 @@ class clsConfig():
             self.set('Reputation','full_country_names','False')
         if not self.config.has_option('Reputation', 'included_columns'):
             self.set('Reputation','included_columns','AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP')
+        if not self.config.has_option('Reputation', 'use_proxy'):
+            self.set('Reputation','use_proxy','False')
+        if not self.config.has_option('Reputation', 'http_proxy_address'):
+            self.set('Reputation','http_proxy_address','http://http_proxy_url/')
+        if not self.config.has_option('Reputation', 'https_proxy_address'):
+            self.set('Reputation','https_proxy_address','https://https_proxy_url/')
         #################Email settings####################
         if not self.config.has_option('Email', 'send_email'):
             self.set("Email","send_email","FALSE")

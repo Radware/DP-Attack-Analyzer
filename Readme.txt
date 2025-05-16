@@ -80,6 +80,7 @@
 		Corrected timestamps in combined graph to UTC.
 		Better handling of boolean options in config.ini
 		Improved json_launcher error reporting.
+		Added proxy capability
 	v0.19.2 - 3 April 2025 (Steve)
 		Fixed an issue in resolving DP names in execution details.
 		Sample IPs are now sorted
