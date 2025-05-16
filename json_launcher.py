@@ -61,8 +61,12 @@ def run_main_script(args):
     """Run the main.py script with the provided arguments."""
     command = [sys.executable, main_script_path] + args
     print(f"Command: {command}", flush=True)
-    result = subprocess.run(command)
-
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True  # Ensures output is returned as string
+    )
+    
     if result.returncode != 0:
         print(f"\n[ERROR] main.py failed with return code {result.returncode}", flush=True)
         print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
