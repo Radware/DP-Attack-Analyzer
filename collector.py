@@ -50,7 +50,7 @@ def prompt_user_time_period():
             choice = '5'
         elif arg_choice == '--previous-time-range' or arg_choice == '-p':
             choice = '6'
-
+    
     if choice == '1':#The past x hours
         hours = int(args.pop(0)) if args else int(input("Enter number of hours: "))
         epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000
@@ -149,7 +149,7 @@ def prompt_user_time_period():
     to_month = datetime.datetime.fromtimestamp(epoch_to_time / 1000).month
     start_year = datetime.datetime.fromtimestamp(epoch_from_time / 1000).year
     end_year = datetime.datetime.fromtimestamp(epoch_to_time / 1000).year
-
+    update_log()
     if from_month == to_month and start_year == end_year:
         epoch_time_range = [epoch_from_time, epoch_to_time, from_month, start_year]
         return epoch_time_range

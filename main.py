@@ -20,14 +20,11 @@ import send_email
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
 
-#epoch_from_time = 1729479600000
-#epoch_to_time = 1729486800000
-
 collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
-        update_log("Beginning data collection")
+        update_log("Clearing/creating temp folder")
         #Make sure temp_folder exists and that it is empty
         if os.path.exists(temp_folder):
             # Remove all files in the temp folder
@@ -43,6 +40,8 @@ if __name__ == '__main__':
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
+
+        update_log("Beginning data collection")
         #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
         v = clsVision.clsVision()
 

@@ -141,11 +141,18 @@ def abuse_ip_db_call(ipAddress):
             'https': config.get('Reputation', 'https_proxy_address', 'https://your_proxy_url')
         }
         update_log(f"  Querying api.abuseipdb.com for {ipAddress}")
-        if enable_proxy:
-            response = requests.request(method='GET', url=url, headers=headers, params=querystring, proxies=proxy, verify=False)
-        else:
-            response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False)
-        update_log(response)
+        try:
+            if enable_proxy:
+                response = requests.request(method='GET', url=url, headers=headers, params=querystring, proxies=proxy, verify=False)
+            else:
+                response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False)
+            update_log(f"Response object: {response}")
+        except Exception as e:
+            update_log(f"Exception occurred during AbuseIPDB request: {e}")
+            update_log(f"     url: {url}")
+            update_log(f"     headers: {headers}")
+            update_log(f"     querystring: {querystring}")
+            return None
         # Formatted output
         decodedResponse = json.loads(response.text)
         # print(json.dumps(decodedResponse, sort_keys=True, indent=4))
