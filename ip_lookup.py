@@ -66,9 +66,12 @@ def get_ip_abuse_data(ip):
             if AbuseIPDB_limit_reached == False:
                 try:
                     abuse_ip_db_response = abuse_ip_db_call(ip)
-                    cached['AbuseIPDB'] = abuse_ip_db_response.get("data",{})
-                    cached['AbuseIPDB']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
-                    write_updates = True
+                    if abuse_ip_db_response:
+                        cached['AbuseIPDB'] = abuse_ip_db_response.get("data",{})
+                        cached['AbuseIPDB']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
+                        write_updates = True
+                    else:
+                        raise
                 except:
                     cached['AbuseIPDB'] = {'data':{'abuseConfidenceScore':'Error'}}
                     cached['AbuseIPDB']['cachedAt'] = 0
@@ -146,13 +149,22 @@ def abuse_ip_db_call(ipAddress):
                 response = requests.request(method='GET', url=url, headers=headers, params=querystring, proxies=proxy, verify=False)
             else:
                 response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False)
+            if response.status_code != 200:
+                raise requests.HTTPError(f"AbuseIPDB responded with status {response.status_code}: {response.text}")
             update_log(f"Response object: {response}")
         except Exception as e:
             update_log(f"Exception occurred during AbuseIPDB request: {e}")
             update_log(f"     url: {url}")
             update_log(f"     headers: {headers}")
             update_log(f"     querystring: {querystring}")
+            update_log(f"     Text: {response.text}")
+            if 'response' in locals() and response is not None:
+                update_log("Partial response info (if available):")
+                update_log(f"  Status Code: {response.status_code}")
+                update_log(f"  Reason: {response.reason}")
+                update_log(f"  Text: {response.text}")
             return None
+        
         # Formatted output
         decodedResponse = json.loads(response.text)
         # print(json.dumps(decodedResponse, sort_keys=True, indent=4))
