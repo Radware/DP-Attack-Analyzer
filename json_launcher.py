@@ -66,7 +66,8 @@ def run_main_script(args):
         capture_output=True,
         text=True  # Ensures output is returned as string
     )
-    
+    print("Command execution complete.")
+
     if result.returncode != 0:
         print(f"\n[ERROR] main.py failed with return code {result.returncode}", flush=True)
         print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
