@@ -67,7 +67,7 @@ def run_main_script(args):
         print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
         print(f"[STDOUT]:\n{result.stdout.strip()}", flush=True)
         print("Exiting json_launcher.py", flush=True)
-        sys.exit(1)
+        sys.exit(0)
 
 if __name__ == "__main__":
     # Load JSON data
