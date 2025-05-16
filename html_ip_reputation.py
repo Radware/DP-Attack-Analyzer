@@ -100,7 +100,6 @@ def generate_html_table(ip_data, table_id="reputation_all"):
     return html
 
 def getIpReputationHTML(ip_sample_data):
-
     ip_data = {}
     for entry in ip_sample_data:
         result = ip_lookup.get_ip_abuse_data(entry['sourceAddress'])
@@ -157,50 +156,55 @@ def getIpReputationHTML(ip_sample_data):
 
 
 def generate_leaflet_map_html(ip_data, map_div_id="attackerMap", map_height="500px"):
-    coords = []
-    for ip, data in ip_data.items():
-        try:
-            lat = float(data.get("IPQualityScore", {}).get("latitude"))
-            lng = float(data.get("IPQualityScore", {}).get("longitude"))
-            if -90 <= lat <= 90 and -180 <= lng <= 180:
-                coords.append({"lat": lat, "lng": lng, "label": ip})
-        except (TypeError, ValueError):
-            continue
+    if config.get('Reputation', 'use_ipqualityscore', False):
+        coords = []
+        for ip, data in ip_data.items():
+            try:
+                lat = float(data.get("IPQualityScore", {}).get("latitude"))
+                lng = float(data.get("IPQualityScore", {}).get("longitude"))
+                if -90 <= lat <= 90 and -180 <= lng <= 180:
+                    coords.append({"lat": lat, "lng": lng, "label": ip})
+            except (TypeError, ValueError):
+                continue
 
-    coords_json = json.dumps(coords)
+        coords_json = json.dumps(coords)
 
-    return f"""
-<h2>Attacker locations</h2>
-<div id="{map_div_id}" style="height: {map_height}; width: 100%; max-width: 800px; margin: auto; width: min(800px, 80%); border: 1px solid #ccc;"></div>
+        return f"""
+    <h2>Attacker locations</h2>
+    <div id="{map_div_id}" style="height: {map_height}; width: 100%; max-width: 800px; margin: auto; width: min(800px, 80%); border: 1px solid #ccc; position: relative; z-index: 0;"></div>
 
-<!-- Leaflet Dependencies -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Leaflet Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {{
-    const map = L.map('{map_div_id}', {{
-      zoomControl: false,  // Disable visible zoom buttons
-    }}).setView([20, 0], 2);
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {{
+        const map = L.map('{map_div_id}', {{
+        zoomControl: false,  // Disable visible zoom buttons
+        }}).setView([20, 0], 2);
 
-    L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 18
-    }}).addTo(map);
+        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+        }}).addTo(map);
 
-    const attackerLocations = {coords_json};
+        const attackerLocations = {coords_json};
 
-    attackerLocations.forEach(({{
-      lat, lng, label
-    }}) => {{
-      L.circleMarker([lat, lng], {{
-        radius: 6,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 0.8
-      }}).addTo(map)
-        .bindPopup(`<strong>${{label}}</strong>`);
+        attackerLocations.forEach(({{
+        lat, lng, label
+        }}) => {{
+        L.circleMarker([lat, lng], {{
+            radius: 6,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 0.8
+        }}).addTo(map)
+            .bindPopup(`<strong>${{label}}</strong>`);
+        }});
     }});
-  }});
-</script>
-"""
+    </script>
+    """
+    else:
+        return f"""<h2>Attacker Location Map</h2>
+        <div style="text-align: center;">ipqualityscore required.</div>
+    """
