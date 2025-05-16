@@ -125,7 +125,7 @@ def get_ip_abuse_data(ip):
 
 def abuse_ip_db_call(ipAddress):
     # Call to https://api.abuseipdb.com
-    key = config.get('Reputation', 'abuseipdb_api_key', '') 
+    key = config.get('Reputation', 'abuseipdb_api_key', '').split('#')[0].strip().strip('"').strip("'")
     if key != '' and key != None:
         url = 'https://api.abuseipdb.com/api/v2/check'
 
@@ -176,7 +176,7 @@ def abuse_ip_db_call(ipAddress):
 
 
 def ip_quality_score_call(ip):
-    key = config.get('Reputation', 'ip_quality_score_api_key', '') 
+    key = config.get('Reputation', 'ip_quality_score_api_key', '').split('#')[0].strip().strip('"').strip("'")
     if key != '' and key != None:
         # Call to https://ipqualityscore.com
         url = f'https://ipqualityscore.com/api/json/ip/{key}/{ip}'
