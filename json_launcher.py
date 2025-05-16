@@ -60,6 +60,7 @@ def build_arguments(json_entry):
 def run_main_script(args):
     """Run the main.py script with the provided arguments."""
     command = [sys.executable, main_script_path] + args
+    print(f"Command: {command}", flush=True)
     result = subprocess.run(command)
 
     if result.returncode != 0:
@@ -79,6 +80,8 @@ if __name__ == "__main__":
         
         # Build arguments from the current JSON entry
         arguments = build_arguments(json_entry)
+        print("Args:", flush=True)
+        print(arguments, flush=True)
 
         # Run the main script with the arguments
         run_main_script(arguments)
