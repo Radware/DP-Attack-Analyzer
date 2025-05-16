@@ -11,15 +11,15 @@ try:
 except ImportError:
     print("The python module 'requests' is not installed. Please install it by running: pip install requests")
 
-if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
-    if config.get("Reputation","full_country_names", False):
-        try:
-            import pycountry
-        except ImportError:
-            print("config: [Reputation] full_country_names is set to true and the python module 'pycountry' is not installed.")
-            print("Please install it by running: pip install pycountry")
-            print("pycountry is needed to resolve 2-letter ISO 3166-1 alpha-2 country codes into full country names")
-            exit()
+#if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+#    if config.get("Reputation","full_country_names", False):
+#        try:
+#            import pycountry
+#        except ImportError:
+#            print("config: [Reputation] full_country_names is set to true and the python module 'pycountry' is not installed.")
+#            print("Please install it by running: pip install pycountry")
+#            print("pycountry is needed to resolve 2-letter ISO 3166-1 alpha-2 country codes into full country names")
+#            exit()
 
 # Suppress insecure request warnings
 requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -114,13 +114,16 @@ def get_ip_abuse_data(ip):
     if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
         if config.get("Reputation","full_country_names", False):
             if len(output.get('AbuseIPDB',{}).get('countryCode','')) == 2:
-                country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
+                #country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
+                country = country_name_from_code(output['AbuseIPDB']['countryCode'].upper())
                 if country:
-                    output['AbuseIPDB']['countryCode'] = country.name
+                    output['AbuseIPDB']['countryCode'] = country
             if len(output.get('IPQualityScore',{}).get('country_code','')) == 2:
-                country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
+                #country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
+                country = country_name_from_code(output['IPQualityScore']['country_code'].upper())
                 if country:
-                    output['IPQualityScore']['country_code'] = country.name
+                    output['IPQualityScore']['country_code'] = country
+    
     return output
 
 def abuse_ip_db_call(ipAddress):
@@ -253,3 +256,174 @@ def parse_data_create_report():
         with open('abuse_report.csv', mode='a', newline="") as abuseipdb_report:
             bdos_writer = csv.writer(abuseipdb_report, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             bdos_writer.writerow([ip , abuse_confidence_score_abuse_ipdb , fraud_score_ipquality_score, proxy_ipquality_score, vpn_ipquality_score, tor_ipquality_score,bot_ipquality_score,recent_abuse_ipquality_score, country_abuse_ipdb , usage_type_abuse_ipdb , isp_abuse_ipdb , domain_abuse_ipdb, hostnames_abuse_ipdb, total_reports_abuse_ipdb, distinct_users_abuse_ipdb , last_reported_abuse_ipdb])
+def country_name_from_code(code):
+    countries = {
+        'US': 'United States',
+        'CA': 'Canada',
+        'GB': 'United Kingdom',
+        'FR': 'France',
+        'DE': 'Germany',
+        'IT': 'Italy',
+        'ES': 'Spain',
+        'CN': 'China',
+        'JP': 'Japan',
+        'IN': 'India',
+        'BR': 'Brazil',
+        'RU': 'Russia',
+        'MX': 'Mexico',
+        'ZA': 'South Africa',
+        'AU': 'Australia',
+        'NZ': 'New Zealand',
+        'AR': 'Argentina',
+        'CL': 'Chile',
+        'CO': 'Colombia',
+        'EG': 'Egypt',
+        'NG': 'Nigeria',
+        'KE': 'Kenya',
+        'KR': 'South Korea',
+        'SE': 'Sweden',
+        'NO': 'Norway',
+        'FI': 'Finland',
+        'DK': 'Denmark',
+        'NL': 'Netherlands',
+        'BE': 'Belgium',
+        'CH': 'Switzerland',
+        'AT': 'Austria',
+        'IE': 'Ireland',
+        'PL': 'Poland',
+        'CZ': 'Czech Republic',
+        'HU': 'Hungary',
+        'GR': 'Greece',
+        'TR': 'Turkey',
+        'IL': 'Israel',
+        'SA': 'Saudi Arabia',
+        'AE': 'United Arab Emirates',
+        'PK': 'Pakistan',
+        'BD': 'Bangladesh',
+        'TH': 'Thailand',
+        'VN': 'Vietnam',
+        'PH': 'Philippines',
+        'MY': 'Malaysia',
+        'SG': 'Singapore',
+        'ID': 'Indonesia',
+        'IR': 'Iran',
+        'IQ': 'Iraq',
+        'SY': 'Syria',
+        'UA': 'Ukraine',
+        'RO': 'Romania',
+        'SK': 'Slovakia',
+        'BG': 'Bulgaria',
+        'HR': 'Croatia',
+        'SI': 'Slovenia',
+        'RS': 'Serbia',
+        'BA': 'Bosnia and Herzegovina',
+        'ME': 'Montenegro',
+        'MK': 'North Macedonia',
+        'AL': 'Albania',
+        'BY': 'Belarus',
+        'KZ': 'Kazakhstan',
+        'GE': 'Georgia',
+        'AM': 'Armenia',
+        'AZ': 'Azerbaijan',
+        'AF': 'Afghanistan',
+        'LK': 'Sri Lanka',
+        'NP': 'Nepal',
+        'MM': 'Myanmar',
+        'KH': 'Cambodia',
+        'LA': 'Laos',
+        'MN': 'Mongolia',
+        'UZ': 'Uzbekistan',
+        'TJ': 'Tajikistan',
+        'TM': 'Turkmenistan',
+        'KG': 'Kyrgyzstan',
+        'ET': 'Ethiopia',
+        'SD': 'Sudan',
+        'DZ': 'Algeria',
+        'MA': 'Morocco',
+        'TN': 'Tunisia',
+        'LY': 'Libya',
+        'GH': 'Ghana',
+        'CI': 'Côte d’Ivoire',
+        'SN': 'Senegal',
+        'UG': 'Uganda',
+        'TZ': 'Tanzania',
+        'ZM': 'Zambia',
+        'ZW': 'Zimbabwe',
+        'MW': 'Malawi',
+        'MZ': 'Mozambique',
+        'AO': 'Angola',
+        'CM': 'Cameroon',
+        'CD': 'Democratic Republic of the Congo',
+        'CG': 'Republic of the Congo',
+        'GA': 'Gabon',
+        'NA': 'Namibia',
+        'BW': 'Botswana',
+        'QA': 'Qatar',
+        'BH': 'Bahrain',
+        'KW': 'Kuwait',
+        'OM': 'Oman',
+        'YE': 'Yemen',
+        'IS': 'Iceland',
+        'LU': 'Luxembourg',
+        'LI': 'Liechtenstein',
+        'MC': 'Monaco',
+        'SM': 'San Marino',
+        'VA': 'Vatican City',
+        'MT': 'Malta',
+        'CY': 'Cyprus',
+        'BB': 'Barbados',
+        'JM': 'Jamaica',
+        'TT': 'Trinidad and Tobago',
+        'BS': 'Bahamas',
+        'CU': 'Cuba',
+        'DO': 'Dominican Republic',
+        'HT': 'Haiti',
+        'PA': 'Panama',
+        'CR': 'Costa Rica',
+        'GT': 'Guatemala',
+        'HN': 'Honduras',
+        'SV': 'El Salvador',
+        'NI': 'Nicaragua',
+        'BZ': 'Belize',
+        'PE': 'Peru',
+        'BO': 'Bolivia',
+        'EC': 'Ecuador',
+        'PY': 'Paraguay',
+        'UY': 'Uruguay',
+        'VE': 'Venezuela',
+        'SR': 'Suriname',
+        'GY': 'Guyana',
+        'TJ': 'Tajikistan',
+        'BT': 'Bhutan',
+        'RW': 'Rwanda',
+        'LS': 'Lesotho',
+        'SZ': 'Eswatini',
+        'ML': 'Mali',
+        'NE': 'Niger',
+        'BF': 'Burkina Faso',
+        'TG': 'Togo',
+        'GM': 'Gambia',
+        'SL': 'Sierra Leone',
+        'LR': 'Liberia',
+        'GN': 'Guinea',
+        'GW': 'Guinea-Bissau',
+        'DJ': 'Djibouti',
+        'ER': 'Eritrea',
+        'SO': 'Somalia',
+        'CF': 'Central African Republic',
+        'SS': 'South Sudan',
+        'NR': 'Nauru',
+        'TV': 'Tuvalu',
+        'FJ': 'Fiji',
+        'WS': 'Samoa',
+        'TO': 'Tonga',
+        'PG': 'Papua New Guinea',
+        'SB': 'Solomon Islands',
+        'VU': 'Vanuatu',
+        'MH': 'Marshall Islands',
+        'FM': 'Micronesia',
+        'PW': 'Palau',
+        'KI': 'Kiribati',
+        'TL': 'Timor-Leste'
+    }
+    return countries.get(code.upper(), 'Unknown country code')
