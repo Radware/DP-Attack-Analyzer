@@ -71,7 +71,7 @@ def send_email(output_file, attack_count, top_pps, top_gbps, htmlSummary):
         return
 
     try:
-        if smtp_auth.upper() == "TRUE":
+        if smtp_auth == True:
             mailserver.starttls()
             mailserver.ehlo()
             mailserver.login(smtp_sender, smtp_password)

@@ -63,8 +63,11 @@ def run_main_script(args):
     result = subprocess.run(command)
 
     if result.returncode != 0:
-        print(f"Error: main.py failed with return code {result.returncode}. Exiting json_launcher.py", flush=True)
-        sys.exit(0)
+        print(f"\n[ERROR] main.py failed with return code {result.returncode}", flush=True)
+        print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
+        print(f"[STDOUT]:\n{result.stdout.strip()}", flush=True)
+        print("Exiting json_launcher.py", flush=True)
+        sys.exit(1)
 
 if __name__ == "__main__":
     # Load JSON data
