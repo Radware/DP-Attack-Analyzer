@@ -60,10 +60,21 @@ def build_arguments(json_entry):
 def run_main_script(args):
     """Run the main.py script with the provided arguments."""
     command = [sys.executable, main_script_path] + args
-    result = subprocess.run(command)
+    print(f"Command: {command}", flush=True)
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True  # Ensures output is returned as string
+    )
+    print("Command execution complete.")
+    print("[STDOUT]:")
+    print(result.stdout)
 
     if result.returncode != 0:
-        print(f"Error: main.py failed with return code {result.returncode}. Exiting json_launcher.py")
+        print(f"\n[ERROR] main.py failed with return code {result.returncode}", flush=True)
+        print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
+        print(f"[STDOUT]:\n{result.stdout.strip()}", flush=True)
+        print("Exiting json_launcher.py", flush=True)
         sys.exit(0)
 
 if __name__ == "__main__":
@@ -76,6 +87,8 @@ if __name__ == "__main__":
         
         # Build arguments from the current JSON entry
         arguments = build_arguments(json_entry)
+        print("Args:", flush=True)
+        print(arguments, flush=True)
 
         # Run the main script with the arguments
         run_main_script(arguments)

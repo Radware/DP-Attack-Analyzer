@@ -423,13 +423,11 @@ class clsVision:
         
         APIUrl = f'https://{self.ip}/mgmt/vrm/monitoring/traffic/periodic/report'
         data = {
-            #"unit": Units,
             "direction": "Inbound",
             "timeInterval": {
                 "from": StartTime,
                 "to": EndTime
             },
-            #"selectedDevices":[]
         }
         if Units:
             data.update({"unit": Units})

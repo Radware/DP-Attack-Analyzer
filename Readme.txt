@@ -72,7 +72,15 @@
 				See the included launcher.json.example for a sample.
 
 
-# Version Control
+# Version Control		
+	v0.20.0 - 22 May 2025 (Steve)
+		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
+		Added reputation pie chart and Attacker location map.
+		"Show ____" buttons text now swap to "Hide ____" after clicking.
+		Corrected timestamps in combined graph to UTC.
+		Better handling of boolean options in config.ini
+		Improved json_launcher error reporting.
+		Added proxy capability
 	v0.19.4 - 16 May 2025 (Prateek)
 		Fixed a bug related to last merge
 	v0.19.3 - 02 May 2025 (Prateek)
