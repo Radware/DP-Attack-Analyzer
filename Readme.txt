@@ -75,7 +75,7 @@
 # Version Control
 	v0.20.1 - 23 March 2025 (Steve)
 		Fixed country code to name conversion to display the country code when the full name is not in the local database.
-	v0.20.0 - 6 March 2025 (Steve)
+	v0.20.0 - 22 May 2025 (Steve)
 		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
 		Added reputation pie chart and Attacker location map.
 		"Show ____" buttons text now swap to "Hide ____" after clicking.
@@ -83,6 +83,10 @@
 		Better handling of boolean options in config.ini
 		Improved json_launcher error reporting.
 		Added proxy capability for reputation data requests
+	v0.19.4 - 16 May 2025 (Prateek)
+		Fixed a bug related to last merge
+	v0.19.3 - 02 May 2025 (Prateek)
+		Add all State 6 / Blocking state footprints to the report
 	v0.19.2 - 3 April 2025 (Steve)
 		Fixed an issue in resolving DP names in execution details.
 		Sample IPs are now sorted
