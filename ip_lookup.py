@@ -312,4 +312,4 @@ def country_name_from_code(code):
         'VU': 'Vanuatu', 'WF': 'Wallis and Futuna', 'WS': 'Samoa', 'YE': 'Yemen', 'YT': 'Mayotte',
         'ZA': 'South Africa', 'ZM': 'Zambia', 'ZW': 'Zimbabwe'
     }
-    return countries.get(code.upper(), 'code')
+    return countries.get(code.upper(), code)

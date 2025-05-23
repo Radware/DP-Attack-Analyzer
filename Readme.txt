@@ -72,7 +72,9 @@
 				See the included launcher.json.example for a sample.
 
 
-# Version Control		
+# Version Control
+	v0.20.1 - 23 March 2025 (Steve)
+		Fixed country code to name conversion to display the country code when the full name is not in the local database.
 	v0.20.0 - 6 March 2025 (Steve)
 		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
 		Added reputation pie chart and Attacker location map.
@@ -80,7 +82,7 @@
 		Corrected timestamps in combined graph to UTC.
 		Better handling of boolean options in config.ini
 		Improved json_launcher error reporting.
-		Added proxy capability
+		Added proxy capability for reputation data requests
 	v0.19.2 - 3 April 2025 (Steve)
 		Fixed an issue in resolving DP names in execution details.
 		Sample IPs are now sorted
