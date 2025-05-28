@@ -74,23 +74,25 @@
 
 # Version Control
 	v0.20.1 - 28 May 2025 (Steve)
-		Improved json error feedback in json_launcher.py
-		Improvements to the --date-range argument
+		Improved json error feedback in json_launcher.py.
+		Improvements to the --date-range argument.
+		Ipqualityscore can now use proxy as well.
+		Added 5 second timeout to each ip reputation lookup.
 	v0.20.0 - 22 May 2025 (Steve)
 		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
 		Added reputation pie chart and Attacker location map.
 		"Show ____" buttons text now swap to "Hide ____" after clicking.
 		Corrected timestamps in combined graph to UTC.
-		Better handling of boolean options in config.ini
+		Better handling of boolean options in config.ini.
 		Improved json_launcher error reporting.
-		Added proxy capability
+		Added proxy capability.
 	v0.19.4 - 16 May 2025 (Prateek)
-		Fixed a bug related to last merge
+		Fixed a bug related to last merge.
 	v0.19.3 - 02 May 2025 (Prateek)
-		Add all State 6 / Blocking state footprints to the report
+		Add all State 6 / Blocking state footprints to the report.
 	v0.19.2 - 3 April 2025 (Steve)
 		Fixed an issue in resolving DP names in execution details.
-		Sample IPs are now sorted
+		Sample IPs are now sorted.
 	v0.19.1 - 13 March 2025 (Prateek)
 		Modified the logic to calculate "Time taken to optimize and create the final footprint" to avoid negative values. 
 	v0.19.0 - 10 March 2025 (Steve)
@@ -99,7 +101,7 @@
 		DefensePro names included in list of DefensePro IPs at the top of the report.
 		json_launcher.py updated to workaround an observed docker infinite loop issue.
 	v0.18.1 - 24 February 2025 (Steve)
-		Multiple bugfixes
+		Multiple bugfixes.
 	v0.18.0 - 21 February 2025 (Steve)
 		Combined Graphs:
 			Added an aggregate line.
@@ -128,7 +130,7 @@
 		Rewrote combined graph code.
 			Datasets can now contan an arbitrary number of metadata lines that will be displayed in the onHover tooltip. 
 			Currently: DefensePro IP, DefensePro Name, and Policy Name. More can be easily added on request.
-		Added Changed 'Device IP' table column to 'Device Info'. It now includes Device Name
+		Added Changed 'Device IP' table column to 'Device Info'. It now includes Device Name.
 		Resolved an issue that occurs when no attacks are present in specified time period.
 	v0.16.7 - 9 January 2025 (Steve)
 		Additional fix for very low traffic condition.
@@ -137,7 +139,7 @@
 	v0.16.5 - 3 January 2025 (Steve + Prateek)
 		hardcoded excluding packet anomalies and changed the use configurable exclude filter in ini file to be attack name based. See: [General] - ExcludeFilters. Default is "DOSS-DNS-Ref-L4-Above-3000"
 	v0.16.4 - 3 January 2025 (Steve + Prateek)
-		Added custom exclude filter option to ini file. See: [General] - ExcludeFilters. Default is "Anomalies,DOSShield"
+		Added custom exclude filter option to ini file. See: [General] - ExcludeFilters. Default is "Anomalies,DOSShield".
 	v0.16.3 - 31 December 2024 (Steve)
 		Fixed a divide by zero condition that could occur during very low traffic conditions.
 	v0.16.2 - 23 December 2024 (Prateek)

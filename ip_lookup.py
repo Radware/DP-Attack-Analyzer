@@ -149,9 +149,10 @@ def abuse_ip_db_call(ipAddress):
         update_log(f"  Querying api.abuseipdb.com for {ipAddress}")
         try:
             if enable_proxy:
-                response = requests.request(method='GET', url=url, headers=headers, params=querystring, proxies=proxy, verify=False)
+                # 5 seconds for connect timeout, 15 seconds for read timeout
+                response = requests.request(method='GET', url=url, headers=headers, params=querystring, proxies=proxy, verify=False, timeout=(5, 15))
             else:
-                response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False)
+                response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"AbuseIPDB responded with status {response.status_code}: {response.text}")
             update_log(f"Response object: {response}")
@@ -186,7 +187,31 @@ def ip_quality_score_call(ip):
 
         # Send the API request
         update_log(f"  Querying ipqualityscore.com for {ip}")
-        response = requests.get(url, verify=False)
+        # 5 seconds for connect timeout, 15 seconds for read timeout
+        response = requests.get(url, verify=False, timeout=(5, 15))
+        try:
+            if enable_proxy:
+                proxy = {
+                    'http': config.get('Reputation', 'http_proxy_address', 'http://your_proxy_url'),
+                    'https': config.get('Reputation', 'https_proxy_address', 'https://your_proxy_url')
+                }
+                # 5 seconds for connect timeout, 15 seconds for read timeout
+                response = requests.request(method='GET', url=url, proxies=proxy, verify=False, timeout=(5, 15))
+            else:
+                response = requests.request(method='GET', url=url, verify=False, timeout=(5, 15))
+            if response.status_code != 200:
+                raise requests.HTTPError(f"ipqualityscore.com responded with status {response.status_code}: {response.text}")
+            update_log(f"Response object: {response}")
+        except Exception as e:
+            update_log(f"Exception occurred during ipqualityscore.com request: {e}")
+            update_log(f"     url: {url}")
+            update_log(f"     Text: {response.text}")
+            if 'response' in locals() and response is not None:
+                update_log("Partial response info (if available):")
+                update_log(f"  Status Code: {response.status_code}")
+                update_log(f"  Reason: {response.reason}")
+                update_log(f"  Text: {response.text}")
+            return None
 
         # Check if the request was successful
         if response.status_code == 200:
