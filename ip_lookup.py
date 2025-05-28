@@ -93,10 +93,10 @@ def get_ip_abuse_data(ip):
                         cached['IPQualityScore']['cachedAt'] = 0
                         if ip_quality_score_response.get('message',"").startswith("You have exceeded"):
                             IPQualityScore_limit_reached = True
-                except:
+                except Exception as e:
                     cached['IPQualityScore'] = {'fraud_score':'Error'}
                     cached['IPQualityScore']['cachedAt'] = 0
-                    update_log(f"    Error retreiving IPQualityScore info for {ip}.")
+                    update_log(f"    Error retreiving IPQualityScore info for {ip}. Type: {type(e).__name__}, Error: {e}")
             else:
                 if cached.get('IPQualityScore',{}).get('cachedAt',0) > 0:
                     update_log(f"    Ipqualityscore.com limit reached. Stale cached data will be used for {ip}.")
@@ -186,9 +186,8 @@ def ip_quality_score_call(ip):
         url = f'https://ipqualityscore.com/api/json/ip/{key}/{ip}'
 
         # Send the API request
-        update_log(f"  Querying ipqualityscore.com for {ip}")
+        update_log(f"  Querying ipqualityscore.com for {ip}:")
         # 5 seconds for connect timeout, 15 seconds for read timeout
-        response = requests.get(url, verify=False, timeout=(5, 15))
         try:
             if enable_proxy:
                 proxy = {
