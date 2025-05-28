@@ -72,7 +72,9 @@
 				See the included launcher.json.example for a sample.
 
 
-# Version Control		
+# Version Control
+	v0.20.1 - 28 May 2025 (Steve)
+		Improved json error feedback in json_launcher.py
 	v0.20.0 - 22 May 2025 (Steve)
 		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
 		Added reputation pie chart and Attacker location map.

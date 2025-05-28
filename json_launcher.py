@@ -7,10 +7,28 @@ import sys
 json_file_path = 'launcher.json'
 main_script_path = 'main.py'
 
-def load_json(file_path):
-    """Load the JSON file and return its contents."""
-    with open(file_path, 'r') as f:
-        return json.load(f)
+def load_json(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"\nJSON decoding error in file '{filepath}':")
+        print(f"  → {e.msg}")
+        print(f"  → Line {e.lineno}, Column {e.colno}")
+        
+        # Optional: Show a line preview
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            if 0 < e.lineno <= len(lines):
+                error_line = lines[e.lineno - 1]
+                print(f"\nProblematic line:\n    {error_line.strip()}")
+                col_index = e.colno - 1  # Convert 1-based col to 0-based index
+                print("\nLine with <error> inserted:")
+                print("    \"" + (error_line[:col_index] + "<error>" + error_line[col_index:]).strip() + "\"")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\nUnexpected error while loading JSON: {e}")
+        sys.exit(0)
 
 def substitute_env_vars(value):
     """Replace placeholders with actual environment variables."""
