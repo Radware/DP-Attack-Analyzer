@@ -81,7 +81,15 @@ def prompt_user_time_period():
                     utc=True
                     from_time = from_time.lower().replace("utc", "").strip()
 
-                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                # Try multiple accepted formats
+                dt = None
+                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                    try:
+                        dt = datetime.datetime.strptime(from_time, fmt)
+                        break
+                    except ValueError:
+                        continue
+
                 if utc: 
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
 
@@ -99,21 +107,28 @@ def prompt_user_time_period():
         while not success:
             try:
                 to_time = args.pop(0) if args else input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS [optional: UTC]) or q to quit: ")
-                if from_time == 'q':
+                if to_time == 'q':
                     print("Quit")
                     exit(1)
 
                 utc=False
-                if "utc" in from_time.lower():
+                if "utc" in to_time.lower():
                     utc=True
-                    from_time = from_time.lower().replace("utc", "").strip()
+                    to_time = to_time.lower().replace("utc", "").strip()
 
-                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                # Try multiple accepted formats
+                dt = None
+                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                    try:
+                        dt = datetime.datetime.strptime(to_time, fmt)
+                        break
+                    except ValueError:
+                        continue
                 if utc: 
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
 
                 #epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
-                epoch_from_time = int(dt.timestamp() * 1000)
+                epoch_to_time = int(dt.timestamp() * 1000)
                 # from_month = dt.month
                 success = True
             except ValueError:

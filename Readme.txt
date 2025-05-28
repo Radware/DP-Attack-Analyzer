@@ -43,7 +43,7 @@
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
-					--date-range, -dr <start_datetime> <end_datetime>  Select data between two specified dates.
+					--date-range, -dr <start_datetime> <end_datetime>  Select data between two specified dates. "DD-MM-YYYY HH:MM:SS [optional:UTC]"
 					--epoch-range, -er <epoch_start> <epoch_end>       Select data between two Unix epoch times.
 					--previous-time-range, -p                          Use the cached time range from the last time the script was run.
 				<defensepro-list>     Comma-separated list of DefensePro names or IP addresses (use '' for all).
@@ -75,6 +75,7 @@
 # Version Control
 	v0.20.1 - 28 May 2025 (Steve)
 		Improved json error feedback in json_launcher.py
+		Improvements to the --date-range argument
 	v0.20.0 - 22 May 2025 (Steve)
 		Added IP Reputation lookup capability. Relevant config.ini settings will appear after first execution.
 		Added reputation pie chart and Attacker location map.
