@@ -79,10 +79,10 @@ def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
     
                 if found_files:
                     update_log(f"Found files: {found_files}")
-                    all_found_files.extend(found_files)
                     for found_file in found_files:
                         remote_file_path = f"{remote_path}/{found_file}"
-                        local_file_path = f"{temp_folder}{found_file}"
+                        local_file_path = f"{temp_folder}{found_file}_{dpData['name']}.txt"
+                        all_found_files.append(local_file_path)                        
                         sftp.get(remote_file_path, local_file_path)
                         update_log(f"Downloaded {remote_file_path} to {local_file_path}")
                         

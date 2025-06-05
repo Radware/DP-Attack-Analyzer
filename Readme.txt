@@ -73,6 +73,9 @@
 
 
 # Version Control
+	v0.20.2 - 05 Jun 2025 (Prateek)
+		Bug Fix to save multiple BDOS log files.
+		Bug Fix for the state 6 footprint part in the BPS / PPS output table
 	v0.20.1 - 28 May 2025 (Steve)
 		Improved json error feedback in json_launcher.py.
 		Improvements to the --date-range argument.

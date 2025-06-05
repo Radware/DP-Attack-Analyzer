@@ -129,7 +129,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button>
                     <div style="display: flex; gap: 4px;">
                         <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
@@ -153,7 +153,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                         <th>State 6 Footprints {syslog_id}</th>
                     </tr>                    
                     <tr>
-                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No Footprints available'}</td>
                     </tr>
                 </table>
             </td>
@@ -244,9 +244,10 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         if isinstance(metrics_summary, str) and f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}" not in metrics_summary:
             metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}"
         metrics_summary = f"{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
-        formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
         state_6_footprints = details.get('state_6_footprints', 'N/A')
         formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
+        formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
+
 
 
 

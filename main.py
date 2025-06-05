@@ -98,13 +98,14 @@ if __name__ == '__main__':
         all_results = {}
 
         for file in found_files:
-            file_path = os.path.join(temp_folder, file)
+            #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
-            result = data_parser.parse_log_file(file_path, syslog_ids)
+            result = data_parser.parse_log_file(file, syslog_ids)
             
             all_results.update(result)
             #print(f"Result for {file}: {result}")
-        #print(all_results)
+        #
+        # print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
         state_6_logs = data_parser.extract_state_6_footprints(all_results)
         #print(state_6_logs) 
