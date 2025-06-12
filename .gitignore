@@ -2,11 +2,12 @@
 test.py
 Output/
 config.ini
-DP-Attack-Story.log
+DP-Attack-Analyzer.log
 launcher.json
 run.sh
 Temp/
 Reports/
+reputation_cache.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

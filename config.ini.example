@@ -8,6 +8,21 @@ rootpassword = radware
 Top_N = 10
 ExcludeFilters = Memcached-Server-Reflect
 
+[Reputation]
+# Set to true to collect IP information from https://www.abuseipdb.com/
+use_abuseipdb = False
+# To obtain an API key for abuseipdb, register at https://www.abuseipdb.com/. API key can be found under https://www.abuseipdb.com/account/api (free tier upto 1000 queries per day)
+abuseipdb_api_key= 1234
+# Set to true to collect IP information from https://www.ipqualityscore.com
+use_ipqualityscore = False
+# To obtain an API key for ipqualityscore, register at https://www.ipqualityscore.com. API key can be found under https://www.ipqualityscore.com/user/settings (free tier limit is 5000 per month as of 2/9/2024)
+ip_quality_score_api_key = 1234
+full_country_names = True
+included_columns = AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP
+use_proxy = False
+http_proxy_address = http://http_proxy_url/
+https_proxy_address = https://https_proxy_url/
+
 [PreviousRun]
 epoch_from_time = 1727907868000
 epoch_to_time = 1727907868000

@@ -269,7 +269,7 @@ class clsVision:
         if r.status_code == 200:
             return r.json()
         else:
-            update_log(f"Error getting device data for {DeviceIP}")
+            update_log(f"Error getting device data for {DeviceIP} - {r}")
             raise Exception(f"Error getting device data for {DeviceIP} - {r}")
 
     def getAttackReports(self, DeviceIP, StartTime, EndTime, filter_json=None):
@@ -423,13 +423,11 @@ class clsVision:
         
         APIUrl = f'https://{self.ip}/mgmt/vrm/monitoring/traffic/periodic/report'
         data = {
-            #"unit": Units,
             "direction": "Inbound",
             "timeInterval": {
                 "from": StartTime,
                 "to": EndTime
             },
-            #"selectedDevices":[]
         }
         if Units:
             data.update({"unit": Units})

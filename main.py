@@ -13,20 +13,19 @@ import html_attack_summary
 import html_data
 import html_graphs
 import html_header
+import html_ip_reputation
 import sftp_module
 import send_email
+from collections import defaultdict
 
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
-
-#epoch_from_time = 1729479600000
-#epoch_to_time = 1729486800000
 
 collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
-        update_log("Beginning data collection")
+        update_log("Clearing/creating temp folder")
         #Make sure temp_folder exists and that it is empty
         if os.path.exists(temp_folder):
             # Remove all files in the temp folder
@@ -42,6 +41,8 @@ if __name__ == '__main__':
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
+
+        update_log("Beginning data collection")
         #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
         v = clsVision.clsVision()
 
@@ -65,8 +66,11 @@ if __name__ == '__main__':
                 args_used = True
             else:
                 if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
-                    policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
-                    policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                    try:
+                        policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                        policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                    except:
+                        policy_names = "<unavailable>"
                     print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
                     print(f"    Available policies: ")
                     print(f"        {policy_names}")
@@ -94,20 +98,24 @@ if __name__ == '__main__':
         all_results = {}
 
         for file in found_files:
-            file_path = os.path.join(temp_folder, file)
+            #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
-            result = data_parser.parse_log_file(file_path, syslog_ids)
+            result = data_parser.parse_log_file(file, syslog_ids)
             
             all_results.update(result)
             #print(f"Result for {file}: {result}")
-        #print(all_results)
+        #
+        # print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
-        #print(categorized_logs) 
+        state_6_logs = data_parser.extract_state_6_footprints(all_results)
+        #print(state_6_logs) 
         metrics = data_parser.calculate_attack_metrics(categorized_logs)
+        
         for syslog_id in syslog_ids:
-            if syslog_id in metrics:
+            if syslog_id in metrics and syslog_id in state_6_logs:
                 syslog_details[syslog_id].update(metrics[syslog_id])
-
+                syslog_details[syslog_id].update(state_6_logs[syslog_id])
+                #print(syslog_details)
         # Calculate top BPS and PPS using html_data.get_top_n
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         for attack in top_by_bps + top_by_pps:
@@ -121,7 +129,7 @@ if __name__ == '__main__':
             }, file, ensure_ascii=False, indent=4)
 
         bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
-        print(combined_unique_samples)
+        #print(combined_unique_samples)
 
         with open(temp_folder + 'SampleData.json', 'w') as file:
             json.dump({
@@ -169,10 +177,11 @@ Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
-DPs: {', '.join(device_ips)}
+DPs: {", ".join(f"{dp_list_ip.get(ip, {}).get('name', 'N/A')}({ip})" for ip in device_ips if ip in dp_list_ip) or 'None'}
 Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
-        
+        #old: DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device, {}).get('name', 'N/A'), 'N/A')} ({device})" for device in device_ips)}
+
         with open(temp_folder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
             file.write(executionStatistics)
         update_log("Data collection complete")
@@ -255,22 +264,18 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, topN, threshold_gbps=1)
         finalHTML += attackdataHTML 
 
+        #add a button to popup IP reputation info when clicked.
+        update_log("Processing IP Reputation")
+        if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
+            finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
+
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
         #try:
         finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
-        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
-        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
-        #except:
-        #    update_log("Unexpected createCombinedChart() error: ")
-        #    error_message = traceback.format_exc()
-        #    indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
-        #    update_log(indented_error_message)
-
-        #Charts per attack ID are removed from bottom of the output. To readd, uncomment the follwoing line and remove display: none; from the output of createChart()
-        #finalHTML += "\n<h2>Charts per attack ID</h2>"  
         update_log("Generating per-attack graphs")
+
         #Add an individual graph for each attack
         for attackID, data in attack_graph_data.items():
             try:
@@ -287,7 +292,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += endHTML
 
         update_log("Creating output file.")
-        html_file_path = os.path.join(temp_folder, 'DP-Attack-Story_Report.html')
+        html_file_path = os.path.join(temp_folder, 'DP-Attack-Analyzer_Report.html')
         with open(html_file_path, 'w') as file:
             file.write(finalHTML)
         update_log(f"Graphs and metrics saved to {html_file_path}")
@@ -296,32 +301,11 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Compressing Output")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        # with tarfile.open(output_file, "w:gz") as tar:
-        #     for item in os.listdir(temp_folder):  # Iterate over the contents of temp_folder
-        #         item_path = os.path.join(temp_folder, item)
-        #         tar.add(item_path, arcname=item)  # Add each item with its base name
-        #     print(f"{temp_folder} has been compressed to {output_file}")
         with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zipf:
             for item in os.listdir(temp_folder): 
                 item_path = os.path.join(temp_folder, item)
                 zipf.write(item_path, arcname=item)
             update_log(f"{temp_folder} has been compressed to {output_file}")
-        # if os.path.exists(temp_folder):
-        #     # Remove all files in the output folder
-        #     for filename in os.listdir(temp_folder):
-        #         file_path = os.path.join(temp_folder, filename)
-        #         try:
-        #             if os.path.isfile(file_path):
-        #                 os.unlink(file_path)
-        #         except Exception as e:
-        #             update_log(f"Failed to delete {file_path}. Reason: {e}")
-        #     try:
-        #         os.rmdir(temp_folder)
-        #         print(f"{temp_folder} has been deleted.")
-        #     except FileNotFoundError:
-        #         print(f"{temp_folder} does not exist.")
-        #     except OSError:
-        #         print(f"{temp_folder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################
 
@@ -335,7 +319,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             top_pps = top_by_pps[0][1].get('Max_Attack_Rate_PPS_formatted', 0)
         if len(top_by_bps) > 0:
             top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
-        if config.get("Email","send_email","False").upper() == "TRUE":
+        if config.get("Email","send_email",False):
             send_email.send_email(output_file, attack_count, top_pps, top_bps, htmlSummary)
         if common_globals['unavailable_devices']:
             update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")

@@ -2,6 +2,7 @@ import time
 import json
 import os
 import datetime
+import ipaddress
 
 from clsVision import *
 from common import *
@@ -80,7 +81,15 @@ def prompt_user_time_period():
                     utc=True
                     from_time = from_time.lower().replace("utc", "").strip()
 
-                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                # Try multiple accepted formats
+                dt = None
+                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                    try:
+                        dt = datetime.datetime.strptime(from_time, fmt)
+                        break
+                    except ValueError:
+                        continue
+
                 if utc: 
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
 
@@ -98,21 +107,28 @@ def prompt_user_time_period():
         while not success:
             try:
                 to_time = args.pop(0) if args else input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS [optional: UTC]) or q to quit: ")
-                if from_time == 'q':
+                if to_time == 'q':
                     print("Quit")
                     exit(1)
 
                 utc=False
-                if "utc" in from_time.lower():
+                if "utc" in to_time.lower():
                     utc=True
-                    from_time = from_time.lower().replace("utc", "").strip()
+                    to_time = to_time.lower().replace("utc", "").strip()
 
-                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                # Try multiple accepted formats
+                dt = None
+                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                    try:
+                        dt = datetime.datetime.strptime(to_time, fmt)
+                        break
+                    except ValueError:
+                        continue
                 if utc: 
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
 
                 #epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
-                epoch_from_time = int(dt.timestamp() * 1000)
+                epoch_to_time = int(dt.timestamp() * 1000)
                 # from_month = dt.month
                 success = True
             except ValueError:
@@ -173,13 +189,15 @@ def user_selects_defensePros(v):
         device_list = v.getDPDeviceList()
         #dp_list_ip = {device['managementIp']: device for device in device_list}
         dp_list_ip = {device['managementIp']: device for device in device_list if device['status'] != 'FAILED'}
-        
+
         # Display list of available DefensePros
         #print("Available Defensepros: " + ', '.join(dp_list_ip.keys()))
         print("Available DefensePros: " + ', '.join(f"{dp_list_ip[key]['name']} ({key})" for key in dp_list_ip))
         
         used_args = False
-        while True:
+        loopcount = 0
+        while loopcount < 100:
+            loopcount += 1
             if args:
                 device_entries = args.pop(0).split(',')
                 used_args = True
@@ -188,7 +206,9 @@ def user_selects_defensePros(v):
                     device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
                 else:
                     device_entries = ""
-            if len(device_entries[0]) == 0 and len(device_entries) == 1:
+                    valid_ips = list(dp_list_ip.keys())
+                    break
+            if len(device_entries) == 1 and len(device_entries[0]) == 0:
                 valid_ips = list(dp_list_ip.keys())
                 break
             else:
@@ -362,6 +382,7 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
     # Combine BPS and PPS sample data, deduplicating them
     deduplicated_sample_data = deduplicate_sample_data(all_sample_data_bps + all_sample_data_pps)
 
+    deduplicated_sample_data.sort(key=lambda x: ipaddress.ip_address(x["sourceAddress"]))
     # Ensure the output directory exists
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)

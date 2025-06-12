@@ -7,10 +7,28 @@ import sys
 json_file_path = 'launcher.json'
 main_script_path = 'main.py'
 
-def load_json(file_path):
-    """Load the JSON file and return its contents."""
-    with open(file_path, 'r') as f:
-        return json.load(f)
+def load_json(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"\nJSON decoding error in file '{filepath}':")
+        print(f"  → {e.msg}")
+        print(f"  → Line {e.lineno}, Column {e.colno}")
+        
+        # Optional: Show a line preview
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            if 0 < e.lineno <= len(lines):
+                error_line = lines[e.lineno - 1]
+                print(f"\nProblematic line:\n    {error_line.strip()}")
+                col_index = e.colno - 1  # Convert 1-based col to 0-based index
+                print("\nLine with <error> inserted:")
+                print("    \"" + (error_line[:col_index] + "<error>" + error_line[col_index:]).strip() + "\"")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\nUnexpected error while loading JSON: {e}")
+        sys.exit(0)
 
 def substitute_env_vars(value):
     """Replace placeholders with actual environment variables."""
@@ -60,13 +78,22 @@ def build_arguments(json_entry):
 def run_main_script(args):
     """Run the main.py script with the provided arguments."""
     command = [sys.executable, main_script_path] + args
-    result = subprocess.run(command)
+    print(f"Command: {command}", flush=True)
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True  # Ensures output is returned as string
+    )
+    print("Command execution complete.")
+    print("[STDOUT]:")
+    print(result.stdout)
 
     if result.returncode != 0:
-        print(f"Error: main.py failed with return code {result.returncode}")
-        return False
-        #sys.exit(result.returncode)
-    return True
+        print(f"\n[ERROR] main.py failed with return code {result.returncode}", flush=True)
+        print(f"[STDERR]:\n{result.stderr.strip()}", flush=True)
+        print(f"[STDOUT]:\n{result.stdout.strip()}", flush=True)
+        print("Exiting json_launcher.py", flush=True)
+        sys.exit(0)
 
 if __name__ == "__main__":
     # Load JSON data
@@ -74,13 +101,14 @@ if __name__ == "__main__":
 
     # Iterate over each entry in the JSON list and call main.py
     for index, json_entry in enumerate(json_data):
-        print(f"Running main.py for entry {index + 1}/{len(json_data)}...")
+        print(f"Running main.py for entry {index + 1}/{len(json_data)}...", flush=True)
         
         # Build arguments from the current JSON entry
         arguments = build_arguments(json_entry)
+        print("Args:", flush=True)
+        print(arguments, flush=True)
 
         # Run the main script with the arguments
-        if not run_main_script(arguments):
-            break
-
+        run_main_script(arguments)
+            
     print("All entries processed successfully.")

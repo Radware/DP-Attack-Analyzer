@@ -1,3 +1,6 @@
+import html_ip_reputation
+from common import *
+
 def generate_sample_data_section(title, sample_data):
     # Generate a sample data table (used for both BPS and PPS)
     html_content = f"<h2>{title}</h2><table border='1' cellpadding='5' cellspacing='0'>"
@@ -35,6 +38,7 @@ def generate_sample_data_section(title, sample_data):
 
 def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
+    reputation_html_content = ""
     html_content = f"""
         <script>
             function toggleContent(id) {{
@@ -87,6 +91,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
         metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
+        state_6_footprints = details.get('state_6_footprints', 'N/A')
+        formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
         formatted_metrics_summary_bps = "<br>".join(metrics_summary.split('\n'))
 
         # Safely convert Max_Attack_Rate_BPS to float
@@ -100,6 +106,10 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
         graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
         # Main row
+        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+            reputation_button_html = f"""<button type="button" class="collapsible" onclick="document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_popup').style.display = 'flex';document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_overlay').style.display = 'block';"" style="flex: 1;">Reputation</button>"""
+        else:
+            reputation_button_html = ''
         html_content += f"""
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
@@ -119,9 +129,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')">BDOS Life Cycle</button>
-                    <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
-                    <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
+                        {reputation_button_html}
+                    </div>
                 </td>
             </tr>
         """
@@ -135,6 +148,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_bps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                    <tr>
+                        <th>State 6 Footprints {syslog_id}</th>
+                    </tr>                    
+                    <tr>
+                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No Footprints available'}</td>
                     </tr>
                 </table>
             </td>
@@ -175,6 +194,14 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                                 <td class="bps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
                             </tr>
                             """
+                        #IP Reputation Popup
+                        #if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                        if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                            ip_data = {}
+                            for sample in samples:
+                                result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                ip_data[sample['sourceAddress']] = result
+                            reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -217,7 +244,11 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         if isinstance(metrics_summary, str) and f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}" not in metrics_summary:
             metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}"
         metrics_summary = f"{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
+        state_6_footprints = details.get('state_6_footprints', 'N/A')
+        formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
         formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
+
+
 
 
         # Safely convert Max_Attack_Rate_PPS to float
@@ -229,7 +260,11 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
         row_class = ''
         graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
-
+        
+        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+            reputation_button_html = f"""<button type="button" class="collapsible" onclick="document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_popup').style.display = 'flex';document.getElementById('reputation_{details.get('Attack ID', 'N/A')}_overlay').style.display = 'block';"" style="flex: 1;">Reputation</button>"""
+        else:
+            reputation_button_html = ''
         # Main row
         html_content += f"""
             <tr class="{row_class}">
@@ -250,9 +285,13 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')">BDOS Life Cycle</button>
-                    <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')" style="white-space: nowrap;">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_pps_{graph_name}');drawChart_{graph_name}();">Graph</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')" style="flex: 1;">Sample Data</button>
+                        {reputation_button_html}
+                    </div>
+                    
                 </td>
             </tr>
         """
@@ -265,6 +304,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_pps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                    <tr>
+                        <th>State 6 Footprints {syslog_id}</th>
+                    </tr>
+                    <tr>
+                        <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No Footprints available'}</td>
                     </tr>
                 </table>
             </td>
@@ -307,6 +352,14 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                                 <td class="pps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
                             </tr>
                             """
+                        #IP Reputation Popup
+                        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                            if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                                ip_data = {}
+                                for sample in samples:
+                                    result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                    ip_data[sample['sourceAddress']] = result
+                                reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -327,9 +380,11 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     # Generate HTML content for combined unique IPs as a table
     html_content += """
     Unique Sample data and Source IP functions: 
-    <button onclick="toggleTable()">Show Source IP Table</button>
-    <button onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
-
+    <button id="toggleButton1" onclick="toggleTable()">Show Source IP Table</button>
+    <button id="toggleButton2" onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
+    <button onclick="document.getElementById('reputation_all_popup').style.display = 'flex';document.getElementById('reputation_all_overlay').style.display = 'block';">
+        Show Aggregated Sample Data IP Abuse Database info
+    </button>
     <!-- Parent container for the two tables -->
     <div style="display: flex; gap: 20px;">
         <!-- Source IP Table -->
@@ -419,17 +474,33 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     function toggleTable() {
         var tableContainer = document.getElementById("ipTableContainer");
-        tableContainer.style.display = (tableContainer.style.display === "block") ? "none" : "block";
+        var toggleButton = document.getElementById("toggleButton1");
+        
+        if (tableContainer.style.display === "block") {
+            tableContainer.style.display = "none";
+            toggleButton.innerText = "Show Source IP Table";
+        } else {
+            tableContainer.style.display = "block";
+            toggleButton.innerText = "Hide Source IP Table";
+        }
     }
 
     function toggleCombinedSamples() {
         var combinedSampleContainer = document.getElementById("combinedSampleContainer");
-        combinedSampleContainer.style.display = (combinedSampleContainer.style.display === "block") ? "none" : "block";
+        var toggleButton = document.getElementById("toggleButton2");
+
+        if (combinedSampleContainer.style.display === "block") {
+            combinedSampleContainer.style.display = "none";
+            toggleButton.innerText = "Show Aggregated Sample Data";
+        } else {
+            combinedSampleContainer.style.display = "block";
+            toggleButton.innerText = "Hide Aggregated Sample Data";
+        }
     }
     </script>
     """
 
-    return html_content
+    return html_content + reputation_html_content
 
 
 

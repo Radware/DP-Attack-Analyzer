@@ -10,7 +10,7 @@ script_start_time = datetime.datetime.now()
 common_globals = {'unavailable_devices':[]}
 
 temp_folder = "./Temp/"
-log_file = temp_folder + "Attack-Story.log"
+log_file = temp_folder + "Attack-Analyzer.log"
 if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)
 
@@ -51,7 +51,7 @@ if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?') or arg
     print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
     print("    --environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.")
-    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Story_Report.html")
+    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Analyzer_Report.html")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")
     print("        --hours, -h <number_of_hours>                      Select data from the past X hours.")
@@ -83,9 +83,24 @@ class clsConfig():
             self.set('General','minimum_minutes_between_waves','5')
         if not self.config.has_option('General', 'ExcludeFilters'):
             self.set('General','ExcludeFilters','Memcached-Server-Reflect')
-            
-        #if not self.config.has_option('General', 'Compress_Output'):
-        #    self.set("General","Compress_Output","TRUE")
+        if not self.config.has_option('Reputation', 'use_abuseipdb'):
+            self.set('Reputation','use_abuseipdb','False')
+        if not self.config.has_option('Reputation', 'abuseipdb_api_key'):
+            self.set('Reputation','abuseipdb_api_key','# To obtain an API key for abuseipdb, register at https://www.abuseipdb.com/. API key can be found under https://www.abuseipdb.com/account/api (free tier upto 1000 queries per day)')
+        if not self.config.has_option('Reputation', 'use_ipqualityscore'):
+            self.set('Reputation','use_ipqualityscore','False')
+        if not self.config.has_option('Reputation', 'ip_quality_score_api_key'):
+            self.set('Reputation','ip_quality_score_api_key','# To obtain an API key for ipqualityscore, register at https://www.ipqualityscore.com. API key can be found under https://www.ipqualityscore.com/user/settings (free tier limit is 5000 per month as of 2/9/2024)')
+        if not self.config.has_option('Reputation', 'full_country_names'):
+            self.set('Reputation','full_country_names','False')
+        if not self.config.has_option('Reputation', 'included_columns'):
+            self.set('Reputation','included_columns','AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP')
+        if not self.config.has_option('Reputation', 'use_proxy'):
+            self.set('Reputation','use_proxy','False')
+        if not self.config.has_option('Reputation', 'http_proxy_address'):
+            self.set('Reputation','http_proxy_address','http://http_proxy_url/')
+        if not self.config.has_option('Reputation', 'https_proxy_address'):
+            self.set('Reputation','https_proxy_address','https://https_proxy_url/')
         #################Email settings####################
         if not self.config.has_option('Email', 'send_email'):
             self.set("Email","send_email","FALSE")
@@ -110,8 +125,13 @@ class clsConfig():
         value = self.config.get(Section, Option, fallback=Fallback, **kwargs)
         if isinstance(value, str) and value.startswith('$'):
             env_var = value[1:]
-            return os.getenv(env_var, value)  # Use the environment variable, fallback to original if not found
-        return value
+            value = os.getenv(env_var, value)  # Use the environment variable, fallback to original if not found
+        if isinstance(value, str):
+            if value.strip().upper() == 'TRUE':
+                value = True
+            elif value.strip().upper() == 'FALSE':
+                value = False
+            return value
         
     def set(self, section, option, value):
         if not self.config.has_section(section):
@@ -128,3 +148,4 @@ class clsConfig():
 
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
+reputation_included_columns = config.get("Reputation","included_columns","AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP").split(",")

@@ -247,11 +247,11 @@ def parse_response_file(v):
     return syslog_ids, syslog_details
 
 
-def parse_log_file(outputFolder, syslog_ids):
+def parse_log_file(file, syslog_ids):
     # Initialize a dictionary to hold the log entries for each attack ID
     attack_logs = {syslog_id: [] for syslog_id in syslog_ids}
     
-    with open(outputFolder, 'r') as file:
+    with open(file, 'r') as file:
         lines = file.readlines()
 
         # To store the most recent matching generic syslog_id for each region and attack type
@@ -266,7 +266,8 @@ def parse_log_file(outputFolder, syslog_ids):
             region = parts[1].strip()  # Example: 'eu1_34_0-24'
             attack_type = parts[3].strip()  # Example: 'network flood IPv4 UDP'
             syslog_id = parts[4].strip()  # Example: 'FFFFFFFF-FFFF-FFFF-2CB3-040F66846000'
-            data = parts[5].strip()
+            data = ','.join(parts[5:]).strip()
+
             
             # Check if this is a generic syslog_id
             if syslog_id in ['FFFFFFFF-0000-0000-0000-000000000000', 'FFFFFFFF-FFFF-FFFF-0000-000000000000']:
@@ -292,41 +293,88 @@ def parse_log_file(outputFolder, syslog_ids):
  # type: ignore
 
 
+import re
+
 def categorize_logs_by_state(attack_logs):
-    # State definitions
     state_definitions = {
         '0': "Attack Ended",
         '2': "Attack has been detected, fp characterization started - FORWARDING",
-        #'3': "Anomaly state (Generated FP not able to mitigate the attack)",
         '4': "Initial fp created - FORWARDING",
-        #'5': "Sub-hierarchy state (AND part of the FP is created)",
         '6': "Final fp created - BLOCKING",
-        #'7': "Non-strictness footprint state (When generated FP is not meeting strictness level)",
         '9': "Burst attack state (Handling burst attack)"
     }
-    
-    # Initialize a dictionary to hold categorized logs based on states
-    #categorized_logs = {syslog_id: [] for syslog_id in attack_logs}
+
     categorized_logs = {syslog_id: [] for syslog_id in attack_logs}
+
     state_pattern = re.compile(r"Entering state (\d+)")
     footprint_pattern = re.compile(r"Footprint \[(.*)\]")
-    
+
     for syslog_id, logs in attack_logs.items():
         current_state = None
         for timestamp, entry in logs:
             state_match = state_pattern.search(entry)
             footprint_match = footprint_pattern.search(entry)
+
             if state_match:
                 state_code = state_match.group(1)
                 if state_code in state_definitions:
                     current_state = state_code
                     state_description = state_definitions[state_code]
                     categorized_logs[syslog_id].append((timestamp, f"State {state_code}: {state_description}", entry))
-            elif footprint_match and current_state:
+
+            elif footprint_match and current_state == '6':
                 state_description = state_definitions.get(current_state, "Unknown state")
                 categorized_logs[syslog_id].append((timestamp, f"State {current_state}: {state_description}", entry))
-    
+
     return categorized_logs
+
+from collections import defaultdict
+
+def extract_state_6_footprints(attack_logs):
+    state_pattern = re.compile(r"Entering state (\d+)")
+    blocks_by_syslog = defaultdict(list)
+
+    for syslog_id, logs in attack_logs.items():
+        in_state_6 = False
+        current_block = []
+
+        for timestamp, entry in logs:
+            state_match = state_pattern.search(entry)
+            if state_match:
+                state_code = state_match.group(1)
+
+                if in_state_6 and current_block:
+                    blocks_by_syslog[syslog_id].append(current_block)
+                    current_block = []
+
+                in_state_6 = (state_code == '6')
+                if in_state_6:
+                    current_block.append((timestamp, entry))
+                else:
+                    in_state_6 = False
+            elif in_state_6:
+                current_block.append((timestamp, entry))
+
+        if in_state_6 and current_block:
+            blocks_by_syslog[syslog_id].append(current_block)
+
+    # Format the output like metrics_summary
+    formatted_results = {}
+    for syslog_id, blocks in blocks_by_syslog.items():
+        block_texts = []
+        for i, block in enumerate(blocks, start=1):
+            block_lines = [f"{timestamp} | {entry}" for timestamp, entry in block]
+            indented = "\n".join(f"    {line}" for line in block_lines)
+            block_texts.append(f"----- State 6 Block {i} -----\n{indented}")
+        formatted_results[syslog_id] = {
+            "state_6_footprints": "\n\n".join(block_texts)
+    }
+
+
+    return formatted_results
+
+
+
 
 
 def calculate_attack_metrics(categorized_logs):
@@ -385,12 +433,11 @@ def calculate_attack_metrics(categorized_logs):
             elif "Entering state 0" in state_description:
                 if last_state_6 and next_state_after_6:
                     break
-
         first_state_2 = state_2_times[0] if state_2_times else None
+        first_state_4 = state_4_times[0] if state_4_times else None
         last_state_4 = state_4_times[-1] if state_4_times else None
         first_time = datetime.strptime(entries[0][0], fmt)
         last_time = datetime.strptime(entries[-1][0], fmt)
-
         if state_6_times and state_6_times[0] == first_time:
             # Burst attack detected
             attack_time = last_time - first_time
@@ -415,7 +462,7 @@ def calculate_attack_metrics(categorized_logs):
 
             final_fp_time = None
             if last_state_6 and last_state_4:
-                final_fp_time = last_state_6 - last_state_4
+                final_fp_time = last_state_6 - first_state_4
             elif not state_6_transition:
                 final_fp_time = "Final footprint not formed"
 

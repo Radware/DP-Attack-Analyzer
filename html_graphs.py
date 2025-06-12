@@ -312,8 +312,7 @@ def pad_with_zeros(myData):
 
 def createCombinedChart(Title, myData):
     """
-    Build HTML+JS to render a combined Google Chart with PPS/BPS lines,
-    including metadata in the tooltip.
+    Build HTML+JS to render a combined Google Chart with PPS/BPS lines
     
     myData structure example:
       {
@@ -443,7 +442,7 @@ def createCombinedChart(Title, myData):
                 console.log("3.1.5");
                 // Populate rows with data and tooltips
                 sortedTimestamps.forEach(timestamp => {{
-                    const row = [new Date(timestamp)];
+                    const row = [new correctedDate(timestamp)];
                     datasetNames.forEach(datasetName => {{
                         const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
                         const value = dataPoint ? dataPoint[1] : null;
@@ -790,16 +789,18 @@ def createPieCharts(attack_data, top_n_attack_ids):
                     'total_packets': int(existing_data['total_packets']) + int(total_packets)
                 }
 
-    # Prepare the data for the charts
-    attack_names = list(aggregate_data.keys())
-    total_bandwidth_values = [aggregate_data[attack]['total_bandwidth'] for attack in attack_names]
-    total_packets_values = [aggregate_data[attack]['total_packets'] for attack in attack_names]
+    # Prepare and sort the data for the charts
+    sorted_items = sorted(aggregate_data.items(), key=lambda x: x[1]['total_bandwidth'], reverse=True)
+
+    attack_names = [item[0] for item in sorted_items]
+    total_bandwidth_values = [item[1]['total_bandwidth'] for item in sorted_items]
+    total_packets_values = [item[1]['total_packets'] for item in sorted_items]
 
     # Calculate the sums for total bandwidth and total packets
     total_bandwidth_sum = sum(total_bandwidth_values)
     total_packets_sum = sum(total_packets_values)
 
-    # Generate the JavaScript for drawing a single 3D pie chart
+    # Generate the JavaScript for drawing a 3D pie chart
     def create_pie_chart_js(chart_name, chart_data, title):
         return f"""
             var {chart_name}Data = google.visualization.arrayToDataTable([
@@ -821,6 +822,7 @@ def createPieCharts(attack_data, top_n_attack_ids):
 
             var {chart_name} = new google.visualization.PieChart(document.getElementById('{chart_name}'));
             {chart_name}.draw({chart_name}Data, {chart_name}Options);
+            document.getElementById('{chart_name}').style="width: 40%; height: 400px; margin: 0; padding: 0;"
         """
 
     # Titles with sums
@@ -837,10 +839,14 @@ def createPieCharts(attack_data, top_n_attack_ids):
         }}
     </script>
 
-    <div style="display: flex; justify-content: center;">
-        <div id="bandwidthChart" style="width: 40%; height: 500px;"></div>
-        <div id="packetsChart" style="width: 40%; height: 500px;"></div>
+    <div style="display: flex; justify-content: center; mgap: 20px; margin: 0; padding: 0; height: 400px; overflow: hidden;">
+        <div id="bandwidthChart" style="width: 40%; height: 500px; margin: 0; padding: 0;"></div>
+        <div id="packetsChart" style="width: 40%; height: 500px; margin: 0; padding: 0;"></div>
+    </div>
+    <div style="display: flex; justify-content: center; margin: 0; padding: 0; overflow: hidden;">
+        <div id="reputationCountryChart" style="margin: 0; padding: 0;"></div>
     </div>
     """
     
     return html_output
+
