@@ -434,16 +434,65 @@ class clsVision:
         if len(selectedDevices) > 0:
             data.update({"selectedDevices": selectedDevices})
 
-        update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))} url: {APIUrl} Query Data: {data}")
+        update_log(f"  Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+        update_log(f"    url: {APIUrl} Query Data: {data}")
 
         response = self._post(APIUrl,json.dumps(data))
-        print(response)
+        update_log(f"    Response code: {response.status_code}")
         if response.status_code == 200:
-            update_log(f"Successfully pulled attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+            update_log(f"    Successfully pulled attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+            update_log(f"    Response datapoints: {len(response.json()['data'])}")
             return response.json()
         else:
             update_log(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+    def getAttackRate15sAvg(self, StartTime, EndTime, Units = "bps", selectedDevices = []):
+        """
+        Calls getAttackRate() in X-hour chunks and aggregates 'data' entries and min/max values from 'dataMap'.
+        """
+        POLL_INTERVAL_IN_HOURS = 1
+        FOUR_HOURS_MS = POLL_INTERVAL_IN_HOURS * 60 * 60 * 1000  # X hours in milliseconds
+        all_data = []
+        global_min = None
+        global_max = None
+
+        current_start = StartTime
+        while current_start < EndTime:
+            current_end = min(current_start + FOUR_HOURS_MS, EndTime)
+            try:
+                chunk = self.getAttackRate(current_start, current_end, Units, selectedDevices)
+                if not chunk:
+                    continue
+
+                # Append data points
+                if "data" in chunk:
+                    all_data.extend(chunk["data"])
+
+                # Track global min and max
+                data_map = chunk.get("dataMap", {})
+                for key in ["minValue", "maxValue"]:
+                    value = data_map.get(key)
+                    if value:
+                        if key == "minValue":
+                            if (global_min is None) or (value["trafficValue"] < global_min["trafficValue"]):
+                                global_min = value
+                        elif key == "maxValue":
+                            if (global_max is None) or (value["trafficValue"] > global_max["trafficValue"]):
+                                global_max = value
+
+            except Exception as e:
+                update_log(f"❌ Failed chunk {current_start} - {current_end}: {e}")
+            current_start = current_end
+            time.sleep(.15)
+
+        return {
+            "data": all_data,
+            "dataMap": {
+                "minValue": global_min,
+                "maxValue": global_max
+            }
+        }
+    
     def connectSSH(self):
         #Initialize the client
         self.client = paramiko.SSHClient()

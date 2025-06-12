@@ -7,11 +7,24 @@ rootpassword = radware
 [General]
 Top_N = 10
 ExcludeFilters = Memcached-Server-Reflect
+compress_output = TRUE
+minimum_minutes_between_waves = 5
+excluded_attack_types = Memcache, PacketAnomalies, RFC
+excludefilters = DOSS-DNS-Ref-L4-Above-3000
+
+[Email]
+send_email = FALSE
+smtp_auth = TRUE
+smtp_password = $SMTP_PASSWD
+smtp_server = email.server.com
+smtp_server_port = 587
+smtp_sender = sender@gmail.com
+smtp_list = emailrecepient1,emailrecpeient2
 
 [Reputation]
-# Set to true to collect IP information from https://www.abuseipdb.com/
+# Set to true to collect IP information from https://www.abuseipdb.com
 use_abuseipdb = False
-# To obtain an API key for abuseipdb, register at https://www.abuseipdb.com/. API key can be found under https://www.abuseipdb.com/account/api (free tier upto 1000 queries per day)
+# To obtain an API key for abuseipdb, register at https://www.abuseipdb.com. API key can be found under https://www.abuseipdb.com/account/api (free tier upto 1000 queries per day)
 abuseipdb_api_key= 1234
 # Set to true to collect IP information from https://www.ipqualityscore.com
 use_ipqualityscore = False
@@ -26,12 +39,3 @@ https_proxy_address = https://https_proxy_url/
 [PreviousRun]
 epoch_from_time = 1727907868000
 epoch_to_time = 1727907868000
-
-[Email]
-send_email = FALSE
-smtp_auth = TRUE
-smtp_password = $SMTP_PASSWD
-smtp_server = email.server.com
-smtp_server_port = 587
-smtp_sender = sender@gmail.com
-smtp_list = emailrecepient1,emailrecpeient2

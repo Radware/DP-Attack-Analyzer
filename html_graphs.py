@@ -128,6 +128,12 @@ def OptionsHTML(Title):
             tooltip: {
                 isHtml: true,
                 format: 'MMM d, y, HH:mm:ss'  // Ensure full date and time are shown in the tooltip
+            },
+            explorer: {
+                actions: ['dragToZoom', 'rightClickToReset'],
+                axis: 'horizontal',
+                keepInBounds: true,
+                maxZoomIn: 40.0
             }
         };"""
     return output
@@ -501,7 +507,13 @@ def createCombinedChart(Title, myData):
                         isHtml: true
                     }},
                     focusTarget: 'category',
-                    interpolateNulls: true
+                    interpolateNulls: true,
+                    explorer: {{
+                        actions: ['dragToZoom', 'rightClickToReset'],
+                        axis: 'horizontal',
+                        keepInBounds: true,
+                        maxZoomIn: 40.0
+                    }}
                 }};
                 chart.draw(data, options);
             }}
