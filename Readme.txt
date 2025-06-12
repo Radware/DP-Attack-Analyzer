@@ -87,6 +87,9 @@
 		Indented some log lines so it's easier to notice when there is an error
 		Script will poll graph data in one hour intervals instead of all at once for increased data granularity
 		Graphs now allow click+drag to zoom in on selected segment. Right-click to zoom out.
+	v0.20.2 - 05 Jun 2025 (Prateek)
+		Bug Fix to save multiple BDOS log files.
+		Bug Fix for the state 6 footprint part in the BPS / PPS output table
 	v0.20.1 - 28 May 2025 (Steve)
 		Improved json error feedback in json_launcher.py.
 		Improvements to the --date-range argument.

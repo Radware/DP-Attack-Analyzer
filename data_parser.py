@@ -247,11 +247,11 @@ def parse_response_file(v):
     return syslog_ids, syslog_details
 
 
-def parse_log_file(outputFolder, syslog_ids):
+def parse_log_file(file, syslog_ids):
     # Initialize a dictionary to hold the log entries for each attack ID
     attack_logs = {syslog_id: [] for syslog_id in syslog_ids}
     
-    with open(outputFolder, 'r') as file:
+    with open(file, 'r') as file:
         lines = file.readlines()
 
         # To store the most recent matching generic syslog_id for each region and attack type
