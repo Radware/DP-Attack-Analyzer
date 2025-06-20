@@ -13,13 +13,22 @@
 # Prerequisites
 
 	This script requires the requests, paramiko, and pysftp libraries. 'pip install requests paramiko pysftp' to download them.
-	You will need to know your Vision/CC username, password and root password. You will need to know the username and password for every defensepro you are pulling data from.
+	You will need to know your Vision/CC username, password and root password.
 	DefensePro version at least 8.32
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
 
 # How to run
+	The script can be run in three modes:
+		- Interactive (without command line arguments)
+		- Automated, using command line arguments and cached settings from previous runs
+		- Automated, using a json list for the arguments
+	
 	Optional:
-		Modify the Top_N variable in config.ini to adjust the number of events that appear in the final report. Default: 10.
+		Config.ini is automatically generated during the script's first execution. It contains multiple customizations that can improve the final product. These include:
+			Customizable report lengths
+			Automatically emailed Reports
+			Integrate IP Reputation and geolocation data from ipqualityscore.com and/or abuseipdb.com
+			Exclude attack types
 
 	Without Arguments:
 		1. Run the script 
@@ -43,7 +52,7 @@
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
-					--date-range, -dr <start_datetime> <end_datetime>  Select data between two specified dates. "DD-MM-YYYY HH:MM:SS [optional:UTC]"
+					--date-range, -dr <start_datetime> <end_datetime>  Select data between two specified dates.
 					--epoch-range, -er <epoch_start> <epoch_end>       Select data between two Unix epoch times.
 					--previous-time-range, -p                          Use the cached time range from the last time the script was run.
 				<defensepro-list>     Comma-separated list of DefensePro names or IP addresses (use '' for all).
@@ -73,6 +82,11 @@
 
 
 # Version Control
+	v0.21.0 - 12 June 2025 (Steve)
+		Log file should now start earlier in the execution.
+		Indented some log lines so it's easier to notice when there is an error
+		Script will poll graph data in one hour intervals instead of all at once for increased data granularity
+		Graphs now allow click+drag to zoom in on selected segment. Right-click to zoom out.
 	v0.20.2 - 05 Jun 2025 (Prateek)
 		Bug Fix to save multiple BDOS log files.
 		Bug Fix for the state 6 footprint part in the BPS / PPS output table

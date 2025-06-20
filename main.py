@@ -37,10 +37,11 @@ if __name__ == '__main__':
                         os.unlink(file_path)
                 except Exception as e:
                     update_log(f"Failed to delete {file_path}. Reason: {e}")
-            pass
+            log_state = 1
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
+            log_state = 1
 
         update_log("Beginning data collection")
         #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
