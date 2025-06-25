@@ -86,7 +86,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     """
 
     # Add top_by_bps data
-    for syslog_id, details in top_by_bps:
+    for syslog_id, details in top_by_bps[:top_n]:
         bdos_lifecycle_log_id = syslog_id
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
@@ -237,7 +237,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     """
 
     # Add top_by_pps data
-    for syslog_id, details in top_by_pps:
+    for syslog_id, details in top_by_pps[:top_n]:
         bdos_lifecycle_log_id = syslog_id
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')

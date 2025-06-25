@@ -1,7 +1,7 @@
 [
     {
-        "use_cached": true,
-		"environment":"Environment_name_1",
+        "environment":"Environment_name_1",
+        "use_cached_credentials": true,
         "time_range": {
             "type": "--hours",
             "value": 24
@@ -13,15 +13,15 @@
         }
     },
     {
-        "use_cached": false,
-		"environment":"Environment_name_2",
+        "environment":"Environment_name_2",
+        "use_cached_credentials": false,
         "vision_ip": "192.168.1.1",
         "vision_username": "admin",
         "vision_password": "radware",
         "vision_root_password": "$ENVIRONMENTAL_VARIABLE_ROOT_PASSWORD",
         "time_range": {
-            "type": "--epoch-range",
-            "value": [859885200, 859971600]
+            "type": "--date-range",
+            "value": ["25-06-2025 00:01:00","25-06-2025 23:59:00"]
         },
         "defensepros_policies": {
             "6.2.3.4": "Policies,policy2",

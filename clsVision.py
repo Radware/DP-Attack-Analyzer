@@ -18,6 +18,7 @@ try:
     import paramiko
 except ImportError:
     print("The python module 'paramiko' is not installed. Please install it by running: pip install paramiko")
+    print("You can install all required modules using: pip install requests paramiko pysftp")
     exit()
 
 

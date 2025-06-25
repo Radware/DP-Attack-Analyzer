@@ -12,24 +12,26 @@ smtp_sender=config.get("Email","smtp_sender","val")
 smtp_password=config.get("Email","smtp_password","val")
 smtp_list = (config.get("Email","smtp_list","val"))
 
-def attach_files(msg, output_file):
-    attachment = open(output_file, "rb")
-    file_name = os.path.basename(output_file)
+def attach_files(msg, output_files):
+    if isinstance(output_files, str):
+        output_files = [output_files]
 
-    mime_attachment = MIMEBase('application', 'octet-stream')
-    mime_attachment.set_payload(attachment.read())
-    encoders.encode_base64(mime_attachment)
+    for output_file in output_files:
+        with open(output_file, "rb") as attachment:
+            file_name = os.path.basename(output_file)
 
-    # Add a header to specify the file name in the email
-    mime_attachment.add_header(
-        'Content-Disposition', 
-        f"attachment; filename={file_name}"
-    )
+            mime_attachment = MIMEBase('application', 'octet-stream')
+            mime_attachment.set_payload(attachment.read())
+            encoders.encode_base64(mime_attachment)
 
-    msg.attach(mime_attachment)
-    attachment.close()
+            mime_attachment.add_header(
+                'Content-Disposition',
+                f"attachment; filename={file_name}"
+            )
 
-def send_email(output_file, attack_count, top_pps, top_gbps, htmlSummary):
+            msg.attach(mime_attachment)
+            
+def send_email(output_files, attack_count, top_pps, top_gbps, htmlSummary):
     update_log("Attempting to send Email") 
     ########## Extract date and time from file name to use in Subject line #########
     #file_name = os.path.basename(compressed_output)  # "EnvName_2024-12-11_11.41.21.tgz"
@@ -55,7 +57,7 @@ def send_email(output_file, attack_count, top_pps, top_gbps, htmlSummary):
 
     msg["Subject"] = subject
         
-    attach_files(msg,output_file)
+    attach_files(msg,output_files)
 
     msg_body = f'\r\n\r\n'
     if common_globals['unavailable_devices']:

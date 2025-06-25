@@ -10,6 +10,8 @@ try:
     import requests
 except ImportError:
     print("The python module 'requests' is not installed. Please install it by running: pip install requests")
+    print("You can install all required modules using: pip install requests paramiko pysftp")
+    exit(1)
 
 # Suppress insecure request warnings
 requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -24,27 +26,28 @@ except FileNotFoundError:
     update_log(f"reputation_cache.json not found.")
     reputation_cache = {}
 
-update_log("Pruning stale cached ip reputation data")
-now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
-ips_to_prune = []
-for ip in reputation_cache.keys():
-    if now - reputation_cache[ip].get('AbuseIPDB',{}).get('cachedAt',99999999999) > 2419200 :
-        update_log(f"    {ip} - AbuseIPDB is >4 weeks stale. Pruning.")
-        reputation_cache[ip].pop('AbuseIPDB', None)
-    if now - reputation_cache[ip].get('IPQualityScore',{}).get('cachedAt',99999999999) > 2419200:
-        update_log(f"    {ip} - IPQualityScore is >4 weeks stale. Pruning.")
-        reputation_cache[ip].pop('IPQualityScore')
-    if reputation_cache[ip].get('IPQualityScore',{}).get('success',True) == False:
-        update_log(f"    {ip} - IPQualityScore last access attempt failed. Pruning")
-        reputation_cache[ip].pop('IPQualityScore')
-    if reputation_cache[ip].get('AbuseIPDB',False) == False and reputation_cache[ip].get('IPQualityScore',False) == False:
-        update_log(f"    {ip} - all data pruned. Removing entry.")
-        ips_to_prune.append(ip)
-for ip in ips_to_prune:
-    if ip in reputation_cache:
-        del reputation_cache[ip]
-with open('reputation_cache.json', 'w', encoding='utf-8') as file:
-    json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
+if config.get('Reputation', 'prune_stale_entries', True):
+    update_log("Pruning stale cached ip reputation data")
+    now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    ips_to_prune = []
+    for ip in reputation_cache.keys():
+        if now - reputation_cache[ip].get('AbuseIPDB',{}).get('cachedAt',99999999999) > 2419200 :
+            update_log(f"    {ip} - AbuseIPDB is >4 weeks stale. Pruning.")
+            reputation_cache[ip].pop('AbuseIPDB', None)
+        if now - reputation_cache[ip].get('IPQualityScore',{}).get('cachedAt',99999999999) > 2419200:
+            update_log(f"    {ip} - IPQualityScore is >4 weeks stale. Pruning.")
+            reputation_cache[ip].pop('IPQualityScore')
+        if reputation_cache[ip].get('IPQualityScore',{}).get('success',True) == False:
+            update_log(f"    {ip} - IPQualityScore last access attempt failed. Pruning")
+            reputation_cache[ip].pop('IPQualityScore')
+        if reputation_cache[ip].get('AbuseIPDB',False) == False and reputation_cache[ip].get('IPQualityScore',False) == False:
+            update_log(f"    {ip} - all data pruned. Removing entry.")
+            ips_to_prune.append(ip)
+    for ip in ips_to_prune:
+        if ip in reputation_cache:
+            del reputation_cache[ip]
+    with open('reputation_cache.json', 'w', encoding='utf-8') as file:
+        json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
 
 def get_ip_abuse_data(ip):
     cached = reputation_cache.get(ip,{})
@@ -65,8 +68,8 @@ def get_ip_abuse_data(ip):
                 except:
                     cached['AbuseIPDB'] = {'data':{'abuseConfidenceScore':'Error'}}
                     cached['AbuseIPDB']['cachedAt'] = 0
-        else:
-            update_log(f"    AbuseIPDB cached data for {ip} is less than 2 weeks old. Using cache")
+        #else:
+        #    update_log(f"    AbuseIPDB cached data for {ip} is less than 2 weeks old. Using cache")
     if config.get('Reputation', 'use_ipqualityscore', False):
         if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - cached.get('IPQualityScore',{}).get('cachedAt',0) > 1209600:
         
@@ -92,8 +95,8 @@ def get_ip_abuse_data(ip):
                     update_log(f"    Ipqualityscore.com limit reached. Stale cached data will be used for {ip}.")
                 else:
                     update_log(f"    Ipqualityscore.com limit reached. No cached data is available for {ip}.")
-        else:
-            update_log(f"    IPQualityScore cached data for {ip} is less than 2 weeks old. Using cache")
+        #else:
+        #    update_log(f"    IPQualityScore cached data for {ip} is less than 2 weeks old. Using cache")
 
     reputation_cache[ip] = cached
     if write_updates:
@@ -145,7 +148,7 @@ def abuse_ip_db_call(ipAddress):
                 response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"AbuseIPDB responded with status {response.status_code}: {response.text}")
-            update_log(f"Response object: {response}")
+            update_log(f"    Response object: {response}")
         except Exception as e:
             update_log(f"Exception occurred during AbuseIPDB request: {e}")
             update_log(f"     url: {url}")
@@ -190,7 +193,7 @@ def ip_quality_score_call(ip):
                 response = requests.request(method='GET', url=url, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"ipqualityscore.com responded with status {response.status_code}: {response.text}")
-            update_log(f"Response object: {response}")
+            update_log(f"    Response object: {response}")
         except Exception as e:
             update_log(f"Exception occurred during ipqualityscore.com request: {e}")
             update_log(f"     url: {url}")
@@ -214,62 +217,6 @@ def ip_quality_score_call(ip):
         update_log('Missing ip_quality_score API Key')
         return {'success': False, 'message':'Missing ip_quality_score API Key'}
 
-# def parse_data_create_report():
-#     # Parse collected data
-
-#     with open( 'abuse_dic_raw.json', 'r') as f:
-#         abuse_dic_raw_str = f.read()
-#         abuse_dic_raw_dict= json.loads(abuse_dic_raw_str)
-
-#     # Create report csv and headers
-#     with open('abuse_report.csv', mode='w', newline="") as abuseipdb_report:
-#         bdos_writer = csv.writer(abuseipdb_report, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#         bdos_writer.writerow(['IP Address' , 'Confidence of Abuse' , 'Fraud Score','Proxy Status','VPN Status','TOR Status','Bot Activity','Recent Abuse', 'Country' , 'Usage Type' , 'ISP' , 'Domain Name', 'Hosnames', 'Total Reports', 'Distinct Users' , 'Last reported'])
-
-
-#     for ip, ip_details in abuse_dic_raw_dict.items():
-#         abuse_confidence_score_abuse_ipdb = 'N/A'
-#         fraud_score_ipquality_score = 'N/A'
-#         proxy_ipquality_score = 'N/A'
-#         vpn_ipquality_score = 'N/A'
-#         tor_ipquality_score = 'N/A'
-#         bot_ipquality_score = 'N/A'
-#         recent_abuse_ipquality_score = 'N/A'
-#         country_abuse_ipdb = 'N/A'
-#         usage_type_abuse_ipdb = 'N/A'
-#         isp_abuse_ipdb = 'N/A'
-#         domain_abuse_ipdb = 'N/A'
-#         hostnames_abuse_ipdb = 'N/A'
-#         total_reports_abuse_ipdb = 'N/A'
-#         distinct_users_abuse_ipdb = 'N/A'
-#         last_reported_abuse_ipdb = 'N/A'
-
-#         if True:
-#             abuse_ipdb_details = ip_details.get('AbuseIPDB Src IP details')
-#             if abuse_ipdb_details:
-#                 abuse_confidence_score_abuse_ipdb = abuse_ipdb_details.get('abuseConfidenceScore')
-#                 country_abuse_ipdb = abuse_ipdb_details.get('countryCode')
-#                 usage_type_abuse_ipdb = abuse_ipdb_details.get('usageType')
-#                 isp_abuse_ipdb = abuse_ipdb_details.get('isp')
-#                 domain_abuse_ipdb = abuse_ipdb_details.get('domain')
-#                 hostnames_abuse_ipdb = (', '.join(abuse_ipdb_details.get('hostnames')))
-#                 total_reports_abuse_ipdb = abuse_ipdb_details.get('totalReports')
-#                 distinct_users_abuse_ipdb = abuse_ipdb_details.get('numDistinctUsers')
-#                 last_reported_abuse_ipdb = abuse_ipdb_details.get('lastReportedAt')
-
-#         if True:
-#             ip_quality_score_details = ip_details.get('IPQualityScore Src IP details')
-#             if ip_quality_score_details:
-#                 fraud_score_ipquality_score = ip_quality_score_details.get('fraud_score')
-#                 proxy_ipquality_score = ip_quality_score_details.get('proxy')
-#                 vpn_ipquality_score = ip_quality_score_details.get('vpn')
-#                 tor_ipquality_score = ip_quality_score_details.get('tor')
-#                 bot_ipquality_score = ip_quality_score_details.get('bot_status')
-#                 recent_abuse_ipquality_score = ip_quality_score_details.get('recent_abuse')
-
-#         with open('abuse_report.csv', mode='a', newline="") as abuseipdb_report:
-#             bdos_writer = csv.writer(abuseipdb_report, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#             bdos_writer.writerow([ip , abuse_confidence_score_abuse_ipdb , fraud_score_ipquality_score, proxy_ipquality_score, vpn_ipquality_score, tor_ipquality_score,bot_ipquality_score,recent_abuse_ipquality_score, country_abuse_ipdb , usage_type_abuse_ipdb , isp_abuse_ipdb , domain_abuse_ipdb, hostnames_abuse_ipdb, total_reports_abuse_ipdb, distinct_users_abuse_ipdb , last_reported_abuse_ipdb])
 
 def country_name_from_code(code):
     countries = {

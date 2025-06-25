@@ -35,6 +35,7 @@ included_columns = AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPD
 use_proxy = False
 http_proxy_address = http://http_proxy_url/
 https_proxy_address = https://https_proxy_url/
+prune_stale_entries = True
 
 [PreviousRun]
 epoch_from_time = 1727907868000

@@ -79,9 +79,11 @@ class clsConfig():
     def __init__(self):
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
+        first_time = False
 
         if not self.config.has_section('Vision'):
             self.config.add_section('Vision')
+            first_time = True
         visionOptions = ['ip', 'username', 'password', 'rootPassword']
         for option in visionOptions:
             if not self.config.has_option('Vision', option):
@@ -92,6 +94,7 @@ class clsConfig():
             self.set('General','minimum_minutes_between_waves','5')
         if not self.config.has_option('General', 'ExcludeFilters'):
             self.set('General','ExcludeFilters','Memcached-Server-Reflect')
+        #Reputation settings
         if not self.config.has_option('Reputation', 'use_abuseipdb'):
             self.set('Reputation','use_abuseipdb','False')
         if not self.config.has_option('Reputation', 'abuseipdb_api_key'):
@@ -101,7 +104,7 @@ class clsConfig():
         if not self.config.has_option('Reputation', 'ip_quality_score_api_key'):
             self.set('Reputation','ip_quality_score_api_key','# To obtain an API key for ipqualityscore, register at https://www.ipqualityscore.com. API key can be found under https://www.ipqualityscore.com/user/settings (free tier limit is 5000 per month as of 2/9/2024)')
         if not self.config.has_option('Reputation', 'full_country_names'):
-            self.set('Reputation','full_country_names','False')
+            self.set('Reputation','full_country_names','True')
         if not self.config.has_option('Reputation', 'included_columns'):
             self.set('Reputation','included_columns','AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP')
         if not self.config.has_option('Reputation', 'use_proxy'):
@@ -110,6 +113,9 @@ class clsConfig():
             self.set('Reputation','http_proxy_address','http://http_proxy_url/')
         if not self.config.has_option('Reputation', 'https_proxy_address'):
             self.set('Reputation','https_proxy_address','https://https_proxy_url/')
+        if not self.config.has_option('Reputation', 'prune_stale_entries'):
+            self.set('Reputation','prune_stale_entries','False')
+        
         #################Email settings####################
         if not self.config.has_option('Email', 'send_email'):
             self.set("Email","send_email","FALSE")
@@ -125,6 +131,16 @@ class clsConfig():
             self.set("Email","smtp_sender","sender@gmail.com")
         if not self.config.has_option('Email', 'smtp_list'):
             self.set("Email","smtp_list","emailrecepient1@domain.com,emailrecepient2@domain.com")
+
+        if first_time:
+            print("")
+            print("")
+            update_log("As this appears to be your first time running the script, config.ini has now been created. ")
+            update_log("Feel free to open it and make modifications.")
+            update_log("There are a lot of settings contained within that enable useful features.")
+            print("")
+            update_log("The script will now exit. This message won't appear again.")
+            exit(0)
 
     def save(self):
         with open("config.ini", "w") as config_file:
