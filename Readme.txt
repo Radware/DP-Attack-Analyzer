@@ -44,6 +44,7 @@
 			python main.py -h
 
 		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
+			```text
 			Script syntax:
 			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
@@ -63,6 +64,7 @@
 				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
+		```
 
 		JSON launcher:
 			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
