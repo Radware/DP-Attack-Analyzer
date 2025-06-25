@@ -84,6 +84,10 @@
 
 
 # Version Control
+	v0.22.1 - 25 June 2025(Steve)
+		Added fix for 'reputation country = None' condition.
+		Added an additonal launcher.json example.
+		Misc code cleanup.
 	v0.22.0 - 25 June 2025 (Steve)
 		Added a favicon to the final report.
 		Sent emails will now include a uncompressed html file in addition to a .zip file.

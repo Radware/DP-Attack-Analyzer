@@ -1,6 +1,6 @@
 [
     {
-        "environment":"Environment_name_1",
+        "environment":"Environment_Name_1",
         "use_cached_credentials": true,
         "time_range": {
             "type": "--hours",
@@ -13,7 +13,7 @@
         }
     },
     {
-        "environment":"Environment_name_2",
+        "environment":"Environment_Name_2",
         "use_cached_credentials": false,
         "vision_ip": "192.168.1.1",
         "vision_username": "admin",
@@ -28,5 +28,13 @@
             "7.3.4.5": "Pol1,pol2",
             "8.5.6.7": " "
         }
-    }
+    },
+    {
+		"environment":"Environment_Name_3",
+        "use_cached_credentials": true,
+        "time_range": {
+            "type": "--epoch-range",
+            "value": [859885200, 859971600]
+        }
+    },
 ]

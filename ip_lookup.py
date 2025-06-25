@@ -106,12 +106,12 @@ def get_ip_abuse_data(ip):
     output = reputation_cache[ip]
     if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
         if config.get("Reputation","full_country_names", True):
-            if len(output.get('AbuseIPDB',{}).get('countryCode','')) == 2:
+            if len(output.get('AbuseIPDB',{}).get('countryCode','') or '') == 2:
                 #country = pycountry.countries.get(alpha_2=output['AbuseIPDB']['countryCode'].upper())
                 country = country_name_from_code(output['AbuseIPDB']['countryCode'].upper())
                 if country:
                     output['AbuseIPDB']['countryCode'] = country
-            if len(output.get('IPQualityScore',{}).get('country_code','')) == 2:
+            if len(output.get('IPQualityScore',{}).get('country_code','') or '') == 2:
                 #country = pycountry.countries.get(alpha_2=output['IPQualityScore']['country_code'].upper())
                 country = country_name_from_code(output['IPQualityScore']['country_code'].upper())
                 if country:

@@ -201,12 +201,14 @@ def user_selects_defensePros(v):
             if args:
                 device_entries = args.pop(0).split(',')
                 used_args = True
+                update_log(f"Script arguments instruct to use the following devices: {device_entries}")
             else:
                 if len(sys.argv) == 1:#If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
                     device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
                 else:
                     device_entries = ""
                     valid_ips = list(dp_list_ip.keys())
+                    update_log(f"Script run with arguments but DefensePro list not specified. Defaulting to <All> devices")
                     break
             if len(device_entries) == 1 and len(device_entries[0]) == 0:
                 valid_ips = list(dp_list_ip.keys())
