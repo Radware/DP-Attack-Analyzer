@@ -84,6 +84,18 @@
 
 
 # Version Control
+	v1.0.0 – 08 July 2025 
+		Highlights:
+			Data collection from multiple points across CyberController and DefensePro
+			Collected data is analyzed and presented in tables and graphs
+			Interactive HTML graphs with zoom and drag
+			One-hour polling intervals for higher data granularity
+			Offline mode for regenerating reports from cached data
+			IP Reputation system with proxy and timeout support
+			Email output with embedded summary and top attack stats
+			Comprehensive attack summary, wave grouping, and mini-graphs
+			Environment and device-aware configuration via launcher.json
+			Improved logging, error handling, and UI consistency
 	v0.22.1 - 25 June 2025(Steve)
 		Added fix for 'reputation country = None' condition.
 		Added an additonal launcher.json example.
