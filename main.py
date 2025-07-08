@@ -266,18 +266,19 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += attackdataHTML 
 
         #add a button to popup IP reputation info when clicked.
-        update_log("Processing IP Reputation")
+        
         if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
+            update_log("Generating Reputation HTML")
             finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
 
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
-        #try:
         finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
-        update_log("Generating per-attack graphs")
+
 
         #Add an individual graph for each attack
+        update_log("Generating per-attack graphs")
         for attackID, data in attack_graph_data.items():
             try:
                 #inalHTML += html_graphs.createChart(attackID, data, epoch_from_time, epoch_to_time)
@@ -292,7 +293,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         endHTML = "</body></html>"
         finalHTML += endHTML
 
-        update_log("Creating output file.")
+        update_log("Saving output html file.")
         html_file_path = os.path.join(temp_folder, 'DP-Attack-Analyzer_Report.html')
         with open(html_file_path, 'w') as file:
             file.write(finalHTML)
@@ -321,7 +322,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         if len(top_by_bps) > 0:
             top_bps = top_by_bps[0][1].get('Max_Attack_Rate_Gbps', 0)
         if config.get("Email","send_email",False):
-            send_email.send_email(output_file, attack_count, top_pps, top_bps, htmlSummary)
+            send_email.send_email(['./Temp/DP-Attack-Analyzer_Report.html', output_file], attack_count, top_pps, top_bps, htmlSummary)
         if common_globals['unavailable_devices']:
             update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")
         else:

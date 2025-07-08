@@ -44,6 +44,7 @@
 			python main.py -h
 
 		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
+			```text
 			Script syntax:
 			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
@@ -63,6 +64,7 @@
 				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
+		'''
 
 		JSON launcher:
 			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
@@ -82,14 +84,38 @@
 
 
 # Version Control
+	v1.0.0 – 08 July 2025 
+		Highlights:
+			Data collection from multiple points across CyberController and DefensePro
+			Collected data is analyzed and presented in tables and graphs
+			Interactive HTML graphs with zoom and drag
+			One-hour polling intervals for higher data granularity
+			Offline mode for regenerating reports from cached data
+			IP Reputation system with proxy and timeout support
+			Email output with embedded summary and top attack stats
+			Comprehensive attack summary, wave grouping, and mini-graphs
+			Environment and device-aware configuration via launcher.json
+			Improved logging, error handling, and UI consistency
+	v0.22.1 - 25 June 2025(Steve)
+		Added fix for 'reputation country = None' condition.
+		Added an additonal launcher.json example.
+		Misc code cleanup.
+	v0.22.0 - 25 June 2025 (Steve)
+		Added a favicon to the final report.
+		Sent emails will now include a uncompressed html file in addition to a .zip file.
+		TopN setting in config.ini now works as intended.
+		Added a message to the user when the script is first executed without a config.ini present.
+		Indented a few console output lines for easier readability.
+		Removed console messages for when cached reputation data is used.
+		Added option to disable pruning stale (>4 week old) reputation data.
 	v0.21.0 - 12 June 2025 (Steve)
 		Log file should now start earlier in the execution.
-		Indented some log lines so it's easier to notice when there is an error
-		Script will poll graph data in one hour intervals instead of all at once for increased data granularity
+		Indented some log lines so it's easier to notice when there is an error.
+		Script will poll graph data in one hour intervals instead of all at once for increased data granularity.
 		Graphs now allow click+drag to zoom in on selected segment. Right-click to zoom out.
 	v0.20.2 - 05 Jun 2025 (Prateek)
 		Bug Fix to save multiple BDOS log files.
-		Bug Fix for the state 6 footprint part in the BPS / PPS output table
+		Bug Fix for the state 6 footprint part in the BPS / PPS output table.
 	v0.20.1 - 28 May 2025 (Steve)
 		Improved json error feedback in json_launcher.py.
 		Improvements to the --date-range argument.

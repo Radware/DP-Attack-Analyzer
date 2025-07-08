@@ -47,7 +47,7 @@ def build_arguments(json_entry):
         args.extend(["--environment", env])
 
     # Check if using cached credentials
-    if json_entry.get('use_cached'):
+    if json_entry.get('use_cached') or json_entry.get('use_cached_credentials'):
         args.append('--use-cached')
     else:
         # Add Vision IP, vision_username, vision_password, vision_root_password with env var substitution

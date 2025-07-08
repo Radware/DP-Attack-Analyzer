@@ -369,22 +369,6 @@ def createCombinedChart(Title, myData):
         out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
         out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
     
-    #Create Aggregate datasets
-    #aggregate_data_pps = {}
-    # aggregate_data_bps = {}
-    # for dataset_name, dataset_data in out_datasets.items():
-    #     for row in dataset_data:
-    #         timestamp = row[0]
-    #         value = row[1]
-    #         if '_pps' in dataset_name:
-    #             aggregate_data_pps[timestamp] = aggregate_data_pps.get(timestamp,0) + value
-    #         else:
-    #             aggregate_data_bps[timestamp] = aggregate_data_bps.get(timestamp,0) + value
-
-    # aggregate_pps_list = sorted([[key, value] for key, value in aggregate_data_pps.items()], key=lambda x: x[0])
-    # aggregate_bps_list = sorted([[key, value] for key, value in aggregate_data_bps.items()], key=lambda x: x[0])
-    # out_datasets['Aggregate_pps'] = aggregate_pps_list 
-    # out_datasets['Aggregate_bps'] = aggregate_bps_list
     metadata_map['Aggregate'] = {}
 
     sorted_keys = sorted(
@@ -469,25 +453,27 @@ def createCombinedChart(Title, myData):
 
             // Update the Google Charts
             function updateChart_{Title}(type) {{
-                let chartData, chart, chartDiv;
+                let chartData, chart, chartDiv, legendTitle;
                 if (type === 'pps') {{
-                    console.log("3.1")
-                    console.log(prepareDataForGoogleCharts_{Title})
-                    console.log(filteredDataset_pps_{Title})
+                    legendTitle = "PPS";
+                    console.log("3.1");
+                    console.log(prepareDataForGoogleCharts_{Title});
+                    console.log(filteredDataset_pps_{Title});
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_pps_{Title});
-                    console.log("3.2")
+                    console.log("3.2");
                     chartDiv = document.getElementById('chart_div_pps_{Title}');
-                    console.log("3.3")
+                    console.log("3.3");
                     chart = new google.visualization.LineChart(chartDiv);
-                    console.log("3.4")
+                    console.log("3.4");
                 }} else if (type === 'bps') {{
+                    legendTitle = "KBPS";
                     chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_bps_{Title});
                     chartDiv = document.getElementById('chart_div_bps_{Title}');
                     chart = new google.visualization.LineChart(chartDiv);
                 }}
                 const data = google.visualization.arrayToDataTable(chartData);
                 const options = {{
-                    title: type.toUpperCase(),
+                    title: legendTitle,
                     curveType: 'function',
                     legend: {{
                         position: 'top',

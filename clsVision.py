@@ -18,6 +18,7 @@ try:
     import paramiko
 except ImportError:
     print("The python module 'paramiko' is not installed. Please install it by running: pip install paramiko")
+    print("You can install all required modules using: pip install requests paramiko pysftp")
     exit()
 
 
@@ -28,7 +29,7 @@ requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.ex
 class clsVision:
     #Initialize and log in to vision instance
     def __init__(self):
-        print(f"\nPlease enter Vision \\ Cyber Controller Information")
+        
         #config = load_config()
         #create_connection_section(config)
         #config = clsConfig() #Imported from common.py
@@ -50,6 +51,8 @@ class clsVision:
                     update_log(f"Incorrect number of arguments. Expected at least 4 (VisionIP Username Password RootPassword). Received {len(args)}. Run main.py -h for more info.")
                     exit(1)
         else:
+            print(f"\nPlease enter Vision \\ Cyber Controller Information")
+            print("")
             ip = input(f"Enter Management IP [{config.get('Vision', 'ip')}]: ") or config.get('Vision', 'ip')
             username = input(f"Enter Username [{config.get('Vision', 'username')}]: ") or config.get('Vision', 'username') 
 
