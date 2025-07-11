@@ -10,18 +10,24 @@ script_start_time = datetime.datetime.now()
 common_globals = {'unavailable_devices':[]}
 
 temp_folder = "./Temp/"
+manual_folder = "./manual/"
 log_file = temp_folder + "Attack-Analyzer.log"
 if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)
 
+
 log_cache = ""
 log_state = 0
-def update_log(message):
+ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+def update_log(message, newline=True, toconsole=True):
     global log_cache, log_state
-    print(message)
+    end_char = '\n' if newline else ''
+    if toconsole:
+        print(message, end=end_char, flush=True)
 
     with(open(log_file,"w" if log_state == 1 else "a")) as file:
-        log_entry = f"[{datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}] {message}\n"
+        clean_message = ansi_escape.sub('', message)
+        log_entry = f"[{datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}] {clean_message}{end_char}"
         log_cache += log_entry
         if log_state == 1:
             file.write(log_cache)
@@ -174,3 +180,14 @@ class clsConfig():
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
 reputation_included_columns = config.get("Reputation","included_columns","AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP").split(",")
+
+class color:
+    RESET = "\033[0m"
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"

@@ -180,28 +180,29 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         """
         # Check if there are sample data
         sample_found = False
-        for entry in bps_data:
-            for attack_id, samples in entry.items():
-                if attack_id == details.get('Attack ID', 'N/A'):
-                    if samples:  # If samples exist
-                        sample_found = True
-                        for sample in samples:
-                            html_content += f"""
-                            <tr>
-                                <td class="bps-source-{details.get('Attack ID', 'N/A')}">{sample.get('sourceAddress', 'N/A')}</td>
-                                <td class="bps-source-port-{details.get('Attack ID', 'N/A')}">{sample.get('sourcePort', 'N/A')}</td>
-                                <td class="bps-dest-{details.get('Attack ID', 'N/A')}">{sample.get('destAddress', 'N/A')}</td>
-                                <td class="bps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
-                            </tr>
-                            """
-                        #IP Reputation Popup
-                        #if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
-                        if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
-                            ip_data = {}
+        if bps_data != None:
+            for entry in bps_data:
+                for attack_id, samples in entry.items():
+                    if attack_id == details.get('Attack ID', 'N/A'):
+                        if samples:  # If samples exist
+                            sample_found = True
                             for sample in samples:
-                                result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
-                                ip_data[sample['sourceAddress']] = result
-                            reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
+                                html_content += f"""
+                                <tr>
+                                    <td class="bps-source-{details.get('Attack ID', 'N/A')}">{sample.get('sourceAddress', 'N/A')}</td>
+                                    <td class="bps-source-port-{details.get('Attack ID', 'N/A')}">{sample.get('sourcePort', 'N/A')}</td>
+                                    <td class="bps-dest-{details.get('Attack ID', 'N/A')}">{sample.get('destAddress', 'N/A')}</td>
+                                    <td class="bps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
+                                </tr>
+                                """
+                            #IP Reputation Popup
+                            #if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                            if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                                ip_data = {}
+                                for sample in samples:
+                                    result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                    ip_data[sample['sourceAddress']] = result
+                                reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -338,28 +339,29 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         """
         # Check if there are sample data
         sample_found = False
-        for entry in pps_data:
-            for attack_id, samples in entry.items():
-                if attack_id == details.get('Attack ID', 'N/A'):
-                    if samples:  # If samples exist
-                        sample_found = True
-                        for sample in samples:
-                            html_content += f"""
-                            <tr>
-                                <td class="pps-source-{details.get('Attack ID', 'N/A')}">{sample.get('sourceAddress', 'N/A')}</td>
-                                <td class="pps-source-port-{details.get('Attack ID', 'N/A')}">{sample.get('sourcePort', 'N/A')}</td>
-                                <td class="pps-dest-{details.get('Attack ID', 'N/A')}">{sample.get('destAddress', 'N/A')}</td>
-                                <td class="pps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
-                            </tr>
-                            """
-                        #IP Reputation Popup
-                        if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
-                            if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
-                                ip_data = {}
-                                for sample in samples:
-                                    result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
-                                    ip_data[sample['sourceAddress']] = result
-                                reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
+        if pps_data != None:
+            for entry in pps_data:
+                for attack_id, samples in entry.items():
+                    if attack_id == details.get('Attack ID', 'N/A'):
+                        if samples:  # If samples exist
+                            sample_found = True
+                            for sample in samples:
+                                html_content += f"""
+                                <tr>
+                                    <td class="pps-source-{details.get('Attack ID', 'N/A')}">{sample.get('sourceAddress', 'N/A')}</td>
+                                    <td class="pps-source-port-{details.get('Attack ID', 'N/A')}">{sample.get('sourcePort', 'N/A')}</td>
+                                    <td class="pps-dest-{details.get('Attack ID', 'N/A')}">{sample.get('destAddress', 'N/A')}</td>
+                                    <td class="pps-dest-port-{details.get('Attack ID', 'N/A')}">{sample.get('destPort', 'N/A')}</td>
+                                </tr>
+                                """
+                            #IP Reputation Popup
+                            if config.get("Reputation", "use_abuseipdb", False) or config.get("Reputation", "use_ipqualityscore", False):
+                                if not f"reputation_{details.get('Attack ID', 'N/A')}_" in reputation_html_content:
+                                    ip_data = {}
+                                    for sample in samples:
+                                        result = html_ip_reputation.ip_lookup.get_ip_abuse_data(sample['sourceAddress'])
+                                        ip_data[sample['sourceAddress']] = result
+                                    reputation_html_content += html_ip_reputation.generate_html_table(ip_data, f"reputation_{details.get('Attack ID', 'N/A')}")
 
         if not sample_found:
             html_content += """
@@ -373,132 +375,133 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
     # Close the attack report table for PPS
     html_content += "</table>"
     
-    unique_ips_bps = [ip.strip() for ip in unique_ips_bps]
-    unique_ips_pps = [ip.strip() for ip in unique_ips_pps]
-    combined_unique_ips = list(set(unique_ips_bps + unique_ips_pps))
+    if unique_ips_bps != None:
+        unique_ips_bps = [ip.strip() for ip in unique_ips_bps]
+        unique_ips_pps = [ip.strip() for ip in unique_ips_pps]
+        combined_unique_ips = list(set(unique_ips_bps + unique_ips_pps))
 
-    # Generate HTML content for combined unique IPs as a table
-    html_content += """
-    Unique Sample data and Source IP functions: 
-    <button id="toggleButton1" onclick="toggleTable()">Show Source IP Table</button>
-    <button id="toggleButton2" onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
-    <button onclick="document.getElementById('reputation_all_popup').style.display = 'flex';document.getElementById('reputation_all_overlay').style.display = 'block';">
-        Show Aggregated Sample Data IP Abuse Database info
-    </button>
-    <!-- Parent container for the two tables -->
-    <div style="display: flex; gap: 20px;">
-        <!-- Source IP Table -->
-        <div id="ipTableContainer" style="display: none;">
-            <table id="sourceIpTable" border="1" style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th style="height: 30px;">Unique Source IPs
-                            <button onclick="copyColumn('sourceIpTable', 0)">Copy</button>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-    """
-
-    # Populate the table with the combined unique IPs
-    for ip in combined_unique_ips:
-        html_content += f"""
-        <tr style="height: 30px;">
-            <td>{ip}</td>
-        </tr>
+        # Generate HTML content for combined unique IPs as a table
+        html_content += """
+        Unique Sample data and Source IP functions: 
+        <button id="toggleButton1" onclick="toggleTable()">Show Source IP Table</button>
+        <button id="toggleButton2" onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
+        <button onclick="document.getElementById('reputation_all_popup').style.display = 'flex';document.getElementById('reputation_all_overlay').style.display = 'block';">
+            Show Aggregated Sample Data IP Abuse Database info
+        </button>
+        <!-- Parent container for the two tables -->
+        <div style="display: flex; gap: 20px;">
+            <!-- Source IP Table -->
+            <div id="ipTableContainer" style="display: none;">
+                <table id="sourceIpTable" border="1" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="height: 30px;">Unique Source IPs
+                                <button onclick="copyColumn('sourceIpTable', 0)">Copy</button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
         """
 
-    html_content += """
-                </tbody>
-            </table>
-        </div>
+        # Populate the table with the combined unique IPs
+        for ip in combined_unique_ips:
+            html_content += f"""
+            <tr style="height: 30px;">
+                <td>{ip}</td>
+            </tr>
+            """
 
-        <!-- Combined Unique Samples Table -->
-        <div id="combinedSampleContainer" style="display: none;">
-            <table id="combinedSampleTable" border="1" style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th style="height: 30px;">Source Address
-                            <button onclick="copyColumn('combinedSampleTable', 0)">Copy</button>
-                        </th>
-                        <th style="height: 30px;">Source Port
-                            <button onclick="copyColumn('combinedSampleTable', 1)">Copy</button>
-                        </th>
-                        <th style="height: 30px;">Destination Address
-                            <button onclick="copyColumn('combinedSampleTable', 2)">Copy</button>
-                        </th>
-                        <th style="height: 30px;">Destination Port
-                            <button onclick="copyColumn('combinedSampleTable', 3)">Copy</button>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-    """
+        html_content += """
+                    </tbody>
+                </table>
+            </div>
 
-    # Populate the combined unique samples table
-    for sample in deduplicated_sample_data:
-        html_content += f"""
-        <tr style="height: 30px;">
-            <td>{sample['sourceAddress']}</td>
-            <td>{sample['sourcePort']}</td>
-            <td>{sample['destAddress']}</td>
-            <td>{sample['destPort']}</td>
-        </tr>
+            <!-- Combined Unique Samples Table -->
+            <div id="combinedSampleContainer" style="display: none;">
+                <table id="combinedSampleTable" border="1" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="height: 30px;">Source Address
+                                <button onclick="copyColumn('combinedSampleTable', 0)">Copy</button>
+                            </th>
+                            <th style="height: 30px;">Source Port
+                                <button onclick="copyColumn('combinedSampleTable', 1)">Copy</button>
+                            </th>
+                            <th style="height: 30px;">Destination Address
+                                <button onclick="copyColumn('combinedSampleTable', 2)">Copy</button>
+                            </th>
+                            <th style="height: 30px;">Destination Port
+                                <button onclick="copyColumn('combinedSampleTable', 3)">Copy</button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
         """
 
-    html_content += """
-                </tbody>
-            </table>
+        # Populate the combined unique samples table
+        for sample in deduplicated_sample_data:
+            html_content += f"""
+            <tr style="height: 30px;">
+                <td>{sample['sourceAddress']}</td>
+                <td>{sample['sourcePort']}</td>
+                <td>{sample['destAddress']}</td>
+                <td>{sample['destPort']}</td>
+            </tr>
+            """
+
+        html_content += """
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <script>
-    function copyColumn(tableId, columnIndex) {
-        var columnData = "";
-        var table = document.getElementById(tableId);
-        for (var i = 1; i < table.rows.length; i++) { // Start from 1 to skip header row
-            columnData += table.rows[i].cells[columnIndex].innerText + '\\n';
+        <script>
+        function copyColumn(tableId, columnIndex) {
+            var columnData = "";
+            var table = document.getElementById(tableId);
+            for (var i = 1; i < table.rows.length; i++) { // Start from 1 to skip header row
+                columnData += table.rows[i].cells[columnIndex].innerText + '\\n';
+            }
+            // Ensure there is column data before copying
+            if (columnData.trim() === "") {
+                alert("No data to copy in this column.");
+                return;
+            }
+            
+            navigator.clipboard.writeText(columnData).then(function() {
+                alert('Column data copied to clipboard!');
+            }, function(err) {
+                alert('Failed to copy: ', err);
+            });
         }
-        // Ensure there is column data before copying
-        if (columnData.trim() === "") {
-            alert("No data to copy in this column.");
-            return;
-        }
-        
-        navigator.clipboard.writeText(columnData).then(function() {
-            alert('Column data copied to clipboard!');
-        }, function(err) {
-            alert('Failed to copy: ', err);
-        });
-    }
 
-    function toggleTable() {
-        var tableContainer = document.getElementById("ipTableContainer");
-        var toggleButton = document.getElementById("toggleButton1");
-        
-        if (tableContainer.style.display === "block") {
-            tableContainer.style.display = "none";
-            toggleButton.innerText = "Show Source IP Table";
-        } else {
-            tableContainer.style.display = "block";
-            toggleButton.innerText = "Hide Source IP Table";
+        function toggleTable() {
+            var tableContainer = document.getElementById("ipTableContainer");
+            var toggleButton = document.getElementById("toggleButton1");
+            
+            if (tableContainer.style.display === "block") {
+                tableContainer.style.display = "none";
+                toggleButton.innerText = "Show Source IP Table";
+            } else {
+                tableContainer.style.display = "block";
+                toggleButton.innerText = "Hide Source IP Table";
+            }
         }
-    }
 
-    function toggleCombinedSamples() {
-        var combinedSampleContainer = document.getElementById("combinedSampleContainer");
-        var toggleButton = document.getElementById("toggleButton2");
+        function toggleCombinedSamples() {
+            var combinedSampleContainer = document.getElementById("combinedSampleContainer");
+            var toggleButton = document.getElementById("toggleButton2");
 
-        if (combinedSampleContainer.style.display === "block") {
-            combinedSampleContainer.style.display = "none";
-            toggleButton.innerText = "Show Aggregated Sample Data";
-        } else {
-            combinedSampleContainer.style.display = "block";
-            toggleButton.innerText = "Hide Aggregated Sample Data";
+            if (combinedSampleContainer.style.display === "block") {
+                combinedSampleContainer.style.display = "none";
+                toggleButton.innerText = "Show Aggregated Sample Data";
+            } else {
+                combinedSampleContainer.style.display = "block";
+                toggleButton.innerText = "Hide Aggregated Sample Data";
+            }
         }
-    }
-    </script>
-    """
+        </script>
+        """
 
     return html_content + reputation_html_content
 

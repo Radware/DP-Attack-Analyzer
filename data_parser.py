@@ -1,23 +1,25 @@
-from datetime import datetime, timezone
+#from datetime import datetime, timezone
 import json
 import csv
 import re
+import os
 
-from common import temp_folder
-from common import topN
+#from common import temp_folder
+#from common import topN
+from common import *
 
 
 #################### Helper functions ####################
 def epoch_to_datetime(epoch_time):
     """Convert epoch time to human-readable datetime format."""
     epoch_time = int(epoch_time)  # Convert epoch_time to integer
-    return datetime.fromtimestamp(epoch_time / 1000.0, tz=timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
+    return datetime.datetime.fromtimestamp(epoch_time / 1000.0, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
     #return datetime.fromtimestamp(epoch_time / 1000.0).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def calculate_duration(start_time, end_time):
-    start_dt = datetime.strptime(start_time, '%d-%m-%Y %H:%M:%S')
-    end_dt = datetime.strptime(end_time, '%d-%m-%Y %H:%M:%S')
+    start_dt = datetime.datetime.strptime(start_time, '%d-%m-%Y %H:%M:%S')
+    end_dt = datetime.datetime.strptime(end_time, '%d-%m-%Y %H:%M:%S')
     duration = end_dt - start_dt
     return str(duration)
 
@@ -33,7 +35,8 @@ def convert_bps_to_gbps(bps_value):
         gbps_value = bps_value / 1_000_000_000  # Convert to Gbps
         return gbps_value
     except (ValueError, TypeError):
-        return 'N/A'  # Return 'N/A' if conversion fails
+        pass
+        return 'N/A..'  # Return 'N/A' if conversion fails
 
 def attackipsid_to_syslog_id(attackid):
     # Split the attackid into two parts
@@ -117,7 +120,7 @@ def attackipsid_to_syslog_id_hex(attackid):
     return syslog_id
 
 
-def parse_response_file(v):
+def parse_response_file():
     # Open and read the JSON response file
     with open(temp_folder + 'response.json', 'r') as file:
         data = json.load(file)
@@ -134,14 +137,14 @@ def parse_response_file(v):
             continue
         
         # Get the active version for the device IP
-        if ip_address not in device_version_cache:
-            active_version = v.getActiveVersion(ip_address)
-            device_version_cache[ip_address] = active_version
-        else:
-            active_version = device_version_cache[ip_address]
-        # Determine if the version is 8.32.x
-        print(device_version_cache)
-        is_version_8_32_x = active_version and active_version.startswith("8.32.")
+        # if ip_address not in device_version_cache:
+        #     active_version = v.getActiveVersion(ip_address)
+        #     device_version_cache[ip_address] = active_version
+        # else:
+        #     active_version = device_version_cache[ip_address]
+        # # Determine if the version is 8.32.x
+        # print(device_version_cache)
+        # is_version_8_32_x = active_version and active_version.startswith("8.32.")
         
         for row_data in ip_data.get('data', []):
             row = row_data.get('row', {})
@@ -174,6 +177,7 @@ def parse_response_file(v):
             Physical_Port = row.get('physicalPort', 'N/A')
 
             Max_Attack_Rate_Gbps = convert_bps_to_gbps(Max_Attack_Rate_BPS)
+
             # Convert epoch times to datetime
             start_time = epoch_to_datetime(start_time_epoch) if start_time_epoch != 'N/A' else 'N/A'
             end_time = epoch_to_datetime(end_time_epoch) if end_time_epoch != 'N/A' else 'N/A'
@@ -182,11 +186,18 @@ def parse_response_file(v):
             duration = calculate_duration(start_time, end_time) if start_time != 'N/A' and end_time != 'N/A' else 'N/A'
             
             # Determine syslog_id based on active version
-            if is_version_8_32_x:
-                syslog_id = attackipsid_to_syslog_id(attackid)
-            else:
-                #print("not 8.32")
+            # if is_version_8_32_x:
+            #     syslog_id = attackipsid_to_syslog_id(attackid)
+            # else:
+            #     #print("not 8.32")
+            #     syslog_id = attackipsid_to_syslog_id_hex(attackid)
+            
+            # Determine syslog_id 
+            if attackid.startswith("FFFFFFFF-FFFF-FFFF"):
                 syslog_id = attackipsid_to_syslog_id_hex(attackid)
+            else:
+                syslog_id = attackipsid_to_syslog_id(attackid)
+            
             
             # Append data to the table
             table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_Gbps, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
@@ -246,6 +257,150 @@ def parse_response_file(v):
     print(f"Data written to CSV file: {output_csv_file}")
     return syslog_ids, syslog_details
 
+def parse_csv(csvfile):
+    """
+    Parses a tab-delimited CSV file-like object and appends its content
+    into a JSON file grouped by device IP in the specified nested format.
+    """
+    update_log("    Processing CSV")
+    json_output_file = temp_folder + "response.json"
+    dp_list_ip = {}
+    # Mapping of JSON output field → input CSV header (or None for generated/default fields)
+    json_field_map = {
+        "deviceIp": "Device IP Address",
+        "sourcePort": "Source Port",
+        "vlanTag": "VLAN Tag",
+        "packetCount": "Total Packets",
+        "packetRate": None,
+        "averageAttackPacketRatePps": None,
+        "lastPeriodBandwidth": None,
+        "poId": "Protected Object",
+        "duration": "Duration",
+        "protocol": "Protocol",
+        "destPort": "Destination Port",
+        "detectorName": "Device Name",
+        "threatGroup": "Threat Group",
+        "destAddress": "Destination IP Address",
+        "ruleName": "Policy Name",
+        "radwareId": "Radware ID",
+        "startTime": "Start Time",
+        "trapVersion": None,
+        "direction": "Direction",
+        "averageAttackRateBps": None,  # Calculated from Total Mbits / Duration
+        "activationId": "Activation Id",
+        "packetType": "Packet Type",
+        "maxAttackRateBps": "Max Attack Rate in Kb",
+        "mplsRd": None,
+        "attackIpsId": "Attack ID",
+        "sourceAddress": "Source IP Address",
+        "isFragmented": None,
+        "latestFootprintText": "Footprint",
+        "enrichmentContainer": None,
+        "deviceVersion": None,
+        "isProcessByWorkflow": "Workflow Rule Process",
+        "physicalPort": "Physical Port",
+        "actionType": "Action",
+        "lastPeriodPacketRate": None,
+        "maxAttackPacketRatePps": "Max pps",
+        "tierId": None,
+        "packetBandwidth": "Total Mbits",
+        "name": "Attack Name",
+        "risk": "Risk",
+        "detectionSource": None,
+        "endTime": "End Time",
+        "category": "Threat Category",
+        "status": None
+    }
+    reader = csv.DictReader(csvfile, delimiter=',')
+    grouped_json = {}
+    
+    for row in reader:
+        json_row = {}
+
+        device_ip = row.get("Device IP Address", "Unknown")
+        device_name = row.get("Device Name", "Unknown")
+        policy = row.get("Policy Name", "Unknown")
+
+        # Create or update the DP entry
+        if device_ip not in dp_list_ip:
+            dp_list_ip[device_ip] = {'name': device_name, 'policies': [policy]}
+        else:
+            dp_list_ip[device_ip]['name'] = device_name  # overwrite is okay
+            policies = dp_list_ip[device_ip].setdefault('policies', [])
+            if policy not in policies:
+                policies.append(policy)
+
+
+        for field, csv_col in json_field_map.items():
+            value = "N/A"
+            if field == "averageAttackRateBps":
+                try:
+                    mbits = float(row.get("Total Mbits", "0").replace(",", ""))
+                    duration = float(row.get("Duration", "0").replace(",", ""))
+                    value = f"{(mbits * 1_000_000 / duration):.2f}" if duration > 0 else "0"
+                except (ValueError, ZeroDivisionError):
+                    value = "0"
+            elif field == "averageAttackPacketRatePps":
+                try:
+                    packets = int(row.get("Total Packets", "0").replace(",", ""))
+                    duration = float(row.get("Duration", "0").replace(",", ""))
+                    value = f"{(packets / duration):.2f}" if duration > 0 else "0"
+                except (ValueError, ZeroDivisionError):
+                    value = "0"
+            elif field == "packetBandwidth":
+                value = int(float(row.get("Total Mbits", "0")) * 1000)
+            elif field in ("startTime", "endTime"):
+                datetime_str = row.get(csv_col, None)
+                if datetime_str:
+                    dt = datetime.datetime.strptime(datetime_str, "%m.%d.%Y %H:%M:%S")
+                    #dt = dt.replace(tzinfo=timezone.utc)  # Treat the timezone as UTC
+                    value = str(int(dt.timestamp() * 1000))
+                    if field == "startTime":
+                        if 'epoch_from_time' not in locals():
+                            epoch_from_time = value
+                        else:
+                            if value < epoch_from_time:
+                                epoch_from_time = value
+                    else:
+                        if 'epoch_to_time' not in locals():
+                            epoch_to_time = value
+                        else:
+                            if value < epoch_from_time:
+                                epoch_to_time = value
+                else:
+                    value = "N/A"
+            elif csv_col:
+                value = row.get(csv_col, "N/A")
+
+            json_row[field] = value
+
+        entry = {"row": json_row}
+        grouped_json.setdefault(device_ip, {"data": []})["data"].append(entry)
+
+    update_log("    Checking for/opening existing JSON")
+    # Merge with existing JSON data if file exists
+    if os.path.exists(json_output_file):
+        try:
+            with open(json_output_file, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+        except json.JSONDecodeError:
+            existing_data = {}
+    else:
+        existing_data = {}
+
+    update_log("    Appending CSV data to JSON")
+    for device_ip, new_block in grouped_json.items():
+        if device_ip in existing_data:
+            existing_data[device_ip]["data"].extend(new_block["data"])
+        else:
+            existing_data[device_ip] = new_block
+
+    update_log("    Saving JSON...", newline=False)
+    # Write merged JSON back
+    with open(json_output_file, 'w', encoding='utf-8') as f:
+        json.dump(existing_data, f, indent=4)
+    update_log(f"    {color.GREEN}Success!{color.RESET}")
+    return dp_list_ip, epoch_from_time, epoch_to_time
 
 def parse_log_file(file, syslog_ids):
     # Initialize a dictionary to hold the log entries for each attack ID
@@ -409,7 +564,7 @@ def calculate_attack_metrics(categorized_logs):
 
         for entry in entries:
             timestamp, _, state_description = entry
-            log_time = datetime.strptime(timestamp, fmt)
+            log_time = datetime.datetime.strptime(timestamp, fmt)
 
             if "Entering state 2" in state_description:
                 state_2_times.append(log_time)
@@ -436,8 +591,8 @@ def calculate_attack_metrics(categorized_logs):
         first_state_2 = state_2_times[0] if state_2_times else None
         first_state_4 = state_4_times[0] if state_4_times else None
         last_state_4 = state_4_times[-1] if state_4_times else None
-        first_time = datetime.strptime(entries[0][0], fmt)
-        last_time = datetime.strptime(entries[-1][0], fmt)
+        first_time = datetime.datetime.strptime(entries[0][0], fmt)
+        last_time = datetime.datetime.strptime(entries[-1][0], fmt)
         if state_6_times and state_6_times[0] == first_time:
             # Burst attack detected
             attack_time = last_time - first_time
@@ -495,11 +650,3 @@ def calculate_attack_metrics(categorized_logs):
             }
 
     return metrics
-
-
-
-
-
-
-
-

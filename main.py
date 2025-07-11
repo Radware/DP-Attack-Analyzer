@@ -2,8 +2,11 @@ import os
 import traceback
 import json
 import datetime
-#import tarfile
+import tarfile
 import zipfile
+import io
+#import codecs
+
 
 #internal modules
 import clsVision
@@ -18,6 +21,7 @@ import sftp_module
 import send_email
 from collections import defaultdict
 
+
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
 
@@ -25,7 +29,7 @@ collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
-        update_log("Clearing/creating temp folder")
+        update_log("Creating/clearing temp folder")
         #Make sure temp_folder exists and that it is empty
         if os.path.exists(temp_folder):
             # Remove all files in the temp folder
@@ -43,58 +47,141 @@ if __name__ == '__main__':
             os.makedirs(temp_folder)
             log_state = 1
 
-        update_log("Beginning data collection")
-        #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
-        v = clsVision.clsVision()
-
-        #Get start time and end time from the user input
-        epoch_from_to_time_list = collector.prompt_user_time_period()
-        epoch_from_time = epoch_from_to_time_list[0]
-        epoch_to_time = epoch_from_to_time_list[1]
-        from_month = epoch_from_to_time_list[2]
-        start_year = epoch_from_to_time_list[3]
-        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None        
-
-        #Prompt user for a list of DefensePros
-        device_ips, dp_list_ip = collector.user_selects_defensePros(v)
-
-        policies = {}
-        args_used = False
-        for ip in device_ips:
-            ip = ip.strip()
-            if args:
-                policy_input = args.pop(0).strip()
-                args_used = True
+        if args and (args[0].lower() == '--manually-collected' or args[0] == '-m'):
+            update_log("Running in manually collected file mode")
+            if os.path.exists(manual_folder):
+                found_files = []
+                dp_list_ip = {}
+                foundtgz = False
+                foundzip = False
+                for filename in os.listdir(manual_folder):
+                    file_path = os.path.join(manual_folder, filename)
+                    if ".tar.gz" in filename:
+                        device_name = "name_not_found"
+                        update_log(f'Processing {file_path}')
+                        #Do tar support file stuff
+                        with tarfile.open(file_path,'r:gz') as outer_tgz:
+                            for member in outer_tgz.getmembers():
+                                if member.isfile() and member.name == './support.txt':
+                                    with outer_tgz.extractfile(member) as f:
+                                        for line in f:
+                                            decoded = line.decode(errors='ignore')
+                                            match = re.search(r'^system mib2-name set (\S+)', decoded)
+                                            if match:
+                                                device_name = match.group(1)
+                                                update_log(f"    Device name found: {color.CYAN}{device_name}{color.RESET}")
+                                                break
+                            for member in outer_tgz.getmembers():
+                                #extract attack log
+                                if member.isfile() and member.name.startswith('./attack_log/') and member.name.endswith('tar.gz'):
+                                    update_log(f'    {member.name} found. Extracting to {temp_folder}...', newline=False)
+                                    inner_tgz_file = outer_tgz.extractfile(member)
+                                    if inner_tgz_file:
+                                        with tarfile.open(fileobj=inner_tgz_file) as inner_tgz:
+                                            for inner_member in inner_tgz.getmembers():
+                                                if inner_member.isfile():
+                                                    base = os.path.basename(inner_member.name)
+                                                    extracted_name = os.path.join(temp_folder, f'{base}_{device_name}.txt')
+                                                    with open(extracted_name,'wb') as f:
+                                                        f.write(inner_tgz.extractfile(inner_member).read())
+                                                    found_files.append(extracted_name)
+                                                    update_log(f'     {color.GREEN}Success!{color.RESET} ({extracted_name})')
+                                                    foundtgz = True
+                    elif ".zip" in filename:
+                        #BDOS csv file
+                        update_log(f"Processing {file_path}")
+                        with zipfile.ZipFile(file_path, 'r') as z:
+                            for inner_file in z.namelist():
+                                if inner_file.lower().endswith('.csv'):
+                                    update_log(f'    Opening {inner_file}...', newline=False)
+                                    with z.open(inner_file) as csv_file:
+                                        text_file = io.TextIOWrapper(csv_file, encoding='utf-8')
+                                        update_log(f'     \033[92mSuccess!\033[0m')
+                                        dp_list_temp, this_epoch_from_time, this_epoch_to_time = data_parser.parse_csv(text_file)
+                                        dp_list_ip.update(dp_list_temp)
+                                        if not 'epoch_from_time' in locals() or this_epoch_from_time < epoch_from_time:
+                                            epoch_from_time = int(this_epoch_from_time)
+                                        if not 'epoch_to_time' in locals() or this_epoch_to_time < epoch_to_time:
+                                            epoch_to_time = int(this_epoch_to_time)
+                                        foundzip = True
+                                        break
+                            else:
+                                update_log(f"WARNING: CSV not found in {file_path}")
+                if not foundtgz:
+                    update_log(f"{color.RED}Error:{color.RESET} Forensics with attack details not found!")
+                    update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
+                    print("The script will now exit.")
+                    exit(0)
+                if not foundzip:
+                    update_log(f"{color.RED}Error:{color.RESET} DefensePro Support file not found!")
+                    update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
+                    print("The script will now exit.")
+                    exit(0)
             else:
-                if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
-                    try:
-                        policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
-                        policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
-                    except:
-                        policy_names = "<unavailable>"
-                    print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
-                    print(f"    Available policies: ")
-                    print(f"        {policy_names}")
-                    policy_input = input(f"Policies (leave blank for All Policies): ").strip()
+                #manual folder doesn't exist! Create it and exit
+                os.makedirs(manual_folder)
+                update_log(f"{color.RED}Error{color.RESET} The ./Manual/ folder did not exist and has been created for you.")
+                update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
+                print("The script will now exit.")
+                exit(0)
+            
+            #end of manual/offline file processing
+        else:
+            #Not manual mode
+            update_log("Beginning data collection")
+            #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
+            v = clsVision.clsVision()
+
+            #Get start time and end time from the user input
+            epoch_from_to_time_list = collector.prompt_user_time_period()
+            epoch_from_time = epoch_from_to_time_list[0]
+            epoch_to_time = epoch_from_to_time_list[1]
+            from_month = epoch_from_to_time_list[2]
+            start_year = epoch_from_to_time_list[3]
+            to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None        
+
+            #Prompt user for a list of DefensePros
+            device_ips, dp_list_ip = collector.user_selects_defensePros(v)
+
+            policies = {}
+            args_used = False
+            for ip in device_ips:
+                ip = ip.strip()
+                if args:
+                    policy_input = args.pop(0).strip()
+                    args_used = True
                 else:
-                    #Args have been used elsewhere but no args have been specified for policies. Default to no filter.
-                    policy_input = ""
-            if policy_input:
-                policies[ip] = [policy.strip() for policy in policy_input.split(',')]
+                    if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
+                        try:
+                            policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                            policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                        except:
+                            policy_names = "<unavailable>"
+                        print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
+                        print(f"    Available policies: ")
+                        print(f"        {policy_names}")
+                        policy_input = input(f"Policies (leave blank for All Policies): ").strip()
+                    else:
+                        #Args have been used elsewhere but no args have been specified for policies. Default to no filter.
+                        policy_input = ""
+                if policy_input:
+                    policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
-        #Get attack data
-        attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
+            #Get attack data
+            attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
 
-        #Save the formatted JSON to a file
-        with open(temp_folder + 'response.json', 'w') as file:
-            json.dump(attack_data, file, indent=4)
-        update_log("Response saved to response.json")
+            #Save the formatted JSON to a file
+            with open(temp_folder + 'response.json', 'w') as file:
+                json.dump(attack_data, file, indent=4)
+            update_log("Response saved to response.json")
 
-        #get bdos attack log from Defensepros
-        found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
-        update_log(f"Files found: {found_files}")
-       
-        syslog_ids, syslog_details = data_parser.parse_response_file(v)
+            #get bdos attack log from Defensepros
+            found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
+            update_log(f"Files found: {found_files}")
+            #End automatic data collection
+
+        #Done with data collection. Start processing       
+        syslog_ids, syslog_details = data_parser.parse_response_file()
         #print(syslog_details)
         all_results = {}
 
@@ -121,6 +208,7 @@ if __name__ == '__main__':
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         for attack in top_by_bps + top_by_pps:
             attack[1]['Device Name'] = dp_list_ip.get(attack[1].get('Device IP', 'N/A'),'N/A')['name']
+            
         with open(temp_folder + 'TopMetrics.json', 'w') as file:
             json.dump({
                 'top_by_bps': top_by_bps,
@@ -129,7 +217,10 @@ if __name__ == '__main__':
                 'count_above_threshold': count_above_threshold
             }, file, ensure_ascii=False, indent=4)
 
-        bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        if 'v' in locals():
+            bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        else:
+            bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = None, None, None, None, None, None
         #print(combined_unique_samples)
 
         with open(temp_folder + 'SampleData.json', 'w') as file:
@@ -145,40 +236,53 @@ if __name__ == '__main__':
         #print(metrics)
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attack_graph_data = {}
-        for syslogID, details in syslog_details.items():
-            if details.get('graph', False):
-                attackData = v.getRawAttackSSH(details['Attack ID'])
-                if len(attackData.get('data',"")) > 2:
-                    attackData['metadata'] = {
-                        'DefensePro IP':details['Device IP'],
-                        'DefensePro Name':dp_list_ip[details['Device IP']]['name'],
-                        'Policy':details['Policy']
-                        }
-                    attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
+        if 'v' in locals():
+            for syslogID, details in syslog_details.items():
+                if details.get('graph', False):
+                    attackData = v.getRawAttackSSH(details['Attack ID'])
+                    if len(attackData.get('data',"")) > 2:
+                        attackData['metadata'] = {
+                            'DefensePro IP':details['Device IP'],
+                            'DefensePro Name':dp_list_ip[details['Device IP']]['name'],
+                            'Policy':details['Policy']
+                            }
+                        attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
         with open(temp_folder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
 
         #Get the overall attack rate graph data for the specified time period
-        selectedDevices = []
-        if len(device_ips) > 0:
-            for ip in device_ips:
-                selectedDevices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
-        rate_data = {
-            'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selectedDevices),
-            'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selectedDevices)
-            }
+        if 'v' in locals():
+            selectedDevices = []
+            if len(device_ips) > 0:
+                for ip in device_ips:
+                    selectedDevices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
+            rate_data = {
+                'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selectedDevices),
+                'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selectedDevices)
+                }
+        else:
+            rate_data = {}
+
         #Save the raw attack rate graph data to a file
         with open(temp_folder + 'TopGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(rate_data, file, ensure_ascii=False, indent=4)
         
         #Save a file with the details of the current run.
             #altenate datetime format .strftime('%a, %d %b %Y %H:%M:%S %Z')
+        if 'v' in locals():
+            cc_details = f"\nVision / Cyber Controller IP: {v.ip}"
+            dp_details = f"""DPs: {", ".join(f"{dp_list_ip.get(ip, {}).get('name', 'N/A')}({ip})" for ip in device_ips if ip in dp_list_ip) or 'None'}"""
+        else:
+            cc_deteails = ""
+            dp_details = f"""DPs: {', '.join(f"{entry.get('name', 'N/A')}({ip})" for ip, entry in dp_list_ip.items()) or 'None'}"""
+            policies = ""
+            for dp, content in dp_list_ip.items():
+                policies += f"{dp}: [{', '.join(content['policies'])}]\n"
         executionStatistics=f"""\
 Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
-End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
-Vision / Cyber Controller IP: {v.ip}
-DPs: {", ".join(f"{dp_list_ip.get(ip, {}).get('name', 'N/A')}({ip})" for ip in device_ips if ip in dp_list_ip) or 'None'}
+End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')} {cc_deteails}
+{dp_details}
 Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
         #old: DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device, {}).get('name', 'N/A'), 'N/A')} ({device})" for device in device_ips)}
@@ -246,8 +350,9 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Create the two graphs at the top of the HTML file
         finalHTML += "\n<h2>Traffic Bandwidth</h2>"
         update_log("Generating first graphs")
-        graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
-        finalHTML += graphHTML
+        if len(rate_data) > 0:
+            graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
+            finalHTML += graphHTML
 
         #Create pie charts
         update_log("Generating pie charts")
@@ -268,13 +373,15 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #add a button to popup IP reputation info when clicked.
         
         if config.get("Reputation","use_abuseipdb", False) or config.get("Reputation","use_ipqualityscore", False):
-            update_log("Generating Reputation HTML")
-            finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
+            if deduplicated_sample_data != None:
+                update_log("Generating Reputation HTML")
+                finalHTML +=  html_ip_reputation.getIpReputationHTML(deduplicated_sample_data)
 
-        #Create dynamic graph combining all attacks into one graph.
-        finalHTML += "\n<h2>Combined Chart</h2>"
-        update_log("Generating combined charts")
-        finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
+        if len(attack_graph_data) > 0:
+            #Create dynamic graph combining all attacks into one graph.
+            finalHTML += "\n<h2>Combined Chart</h2>"
+            update_log("Generating combined charts")
+            finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
 
 
         #Add an individual graph for each attack

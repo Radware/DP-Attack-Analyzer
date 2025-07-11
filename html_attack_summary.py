@@ -97,7 +97,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         waves = merged_waves
 
         peak_traffic = highest_aggregate_15_seconds(combined_graph_data)
-        if graph_data['bps']['dataMap']['maxValue']:
+        if len(graph_data) > 0 and graph_data['bps']['dataMap']['maxValue']:
             peak_traffic['bps_time'] = int(graph_data['bps']['dataMap']['maxValue']['timeStamp'])
             peak_traffic['pps_time'] = int(graph_data['pps']['dataMap']['maxValue']['timeStamp'])
             peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
@@ -118,11 +118,16 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         attacked_destinations = set()
         attack_sources = set()
         destination_ports = set()
-        for sample in sample_data:
-            attack_sources.add(sample['sourceAddress'])
-            attacked_destinations.add(sample['destAddress'])
-            destination_ports.add(sample['destPort'])
-        
+        if sample_data != None:
+            for sample in sample_data:
+                attack_sources.add(sample['sourceAddress'])
+                attacked_destinations.add(sample['destAddress'])
+                destination_ports.add(sample['destPort'])
+        else:
+            attack_sources.add("0.0.0.0")
+            attacked_destinations.add("0.0.0.0")
+            destination_ports.add("0")
+
         attack_sources = list(attack_sources)
         attacked_destinations = list(attacked_destinations)
         destination_ports = list(destination_ports)
