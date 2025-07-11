@@ -13,7 +13,7 @@ def getHeader(stats):
   <body>
     <table>
       <tr>
-        <td width="50%" style="text-align: center; border: none;">{logo()}</td>
+        <td width="50%" style="text-align: center; vertical-align: top; border: none;">{logo()}</td>
         <td width="50%" style="border: none; text-align: left;">
 {stats}  
       </td>

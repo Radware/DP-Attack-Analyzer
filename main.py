@@ -276,14 +276,23 @@ if __name__ == '__main__':
             cc_deteails = ""
             dp_details = f"""DPs: {', '.join(f"{entry.get('name', 'N/A')}({ip})" for ip, entry in dp_list_ip.items()) or 'None'}"""
             policies = ""
-            for dp, content in dp_list_ip.items():
-                policies += f"{dp}: [{', '.join(content['policies'])}]\n"
+            # for dp, content in dp_list_ip.items():
+            #     policies += f"        {dp}: [{', '.join(content['policies'])}]\n"
+            
+            unique_policies = set()
+            for content in dp_list_ip.values():
+                unique_policies.update(content.get("policies", []))
+
+            policies += f"[{', '.join(sorted(unique_policies))}]\n"
+        if len(common_globals['unavailable_devices']) > 0:
+            unavailables = f"Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}\n"
+        else:
+            unavailables = ""
         executionStatistics=f"""\
 Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')} {cc_deteails}
-{dp_details}
-Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
+{dp_details}{unavailables}
 Policies: {"All" if len(policies) == 0 else policies}"""
         #old: DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device, {}).get('name', 'N/A'), 'N/A')} ({device})" for device in device_ips)}
 
