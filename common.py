@@ -8,6 +8,7 @@ args = sys.argv.copy()
 script_filename = args.pop(0)
 script_start_time = datetime.datetime.now()
 common_globals = {'unavailable_devices':[]}
+common_globals['Manual Mode'] = False
 
 temp_folder = "./Temp/"
 manual_folder = "./manual/"

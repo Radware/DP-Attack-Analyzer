@@ -313,6 +313,7 @@ def parse_csv(csvfile):
     }
     reader = csv.DictReader(csvfile, delimiter=',')
     grouped_json = {}
+    csv_data = {'Destination IP Address':{}, 'Destination Port':{}, 'Source IP Address':{}, 'Source Port':{}, 'Protocol':{}, 'Protocol Kbits':{}, 'Protocol Packets':{}}
     
     for row in reader:
         json_row = {}
@@ -369,6 +370,14 @@ def parse_csv(csvfile):
                                 epoch_to_time = value
                 else:
                     value = "N/A"
+            elif csv_col in csv_data.keys():
+                value = row.get(csv_col, "N/A")
+                if csv_col == "Protocol":
+                    csv_data[csv_col][value] = int(csv_data[csv_col].get(value,0)) + 1
+                    csv_data[csv_col + " Kbits"][value] = int(csv_data[csv_col + " Kbits"].get(value,0)) + max(int(float(row.get("Total Mbits", 1))* 1000), 1)
+                    csv_data[csv_col + " Packets"][value] = int(csv_data[csv_col + " Packets"].get(value,0)) + max(int(row.get("Total Packets", 1)), 1)
+                else:
+                    csv_data[csv_col][value] = int(csv_data[csv_col].get(value,0)) + 1
             elif csv_col:
                 value = row.get(csv_col, "N/A")
 
@@ -377,6 +386,7 @@ def parse_csv(csvfile):
         entry = {"row": json_row}
         grouped_json.setdefault(device_ip, {"data": []})["data"].append(entry)
 
+    
     update_log("    Checking for/opening existing JSON")
     # Merge with existing JSON data if file exists
     if os.path.exists(json_output_file):
@@ -400,7 +410,7 @@ def parse_csv(csvfile):
     with open(json_output_file, 'w', encoding='utf-8') as f:
         json.dump(existing_data, f, indent=4)
     update_log(f"    {color.GREEN}Success!{color.RESET}")
-    return dp_list_ip, epoch_from_time, epoch_to_time
+    return dp_list_ip, epoch_from_time, epoch_to_time, csv_data
 
 def parse_log_file(file, syslog_ids):
     # Initialize a dictionary to hold the log entries for each attack ID
@@ -423,7 +433,7 @@ def parse_log_file(file, syslog_ids):
             syslog_id = parts[4].strip()  # Example: 'FFFFFFFF-FFFF-FFFF-2CB3-040F66846000'
             data = ','.join(parts[5:]).strip()
 
-            
+
             # Check if this is a generic syslog_id
             if syslog_id in ['FFFFFFFF-0000-0000-0000-000000000000', 'FFFFFFFF-FFFF-FFFF-0000-000000000000']:
                 # Store this line as the most recent generic syslog_id for this region and attack type

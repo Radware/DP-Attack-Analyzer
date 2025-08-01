@@ -18,7 +18,10 @@ def getHeader(stats):
 {stats}  
       </td>
       </tr>
-    </table>"""
+    </table>
+    <script type="text/javascript">
+      google.charts.load('current', {{'packages':['corechart']}});
+    </script>"""
     return header
 
 def getCSS():

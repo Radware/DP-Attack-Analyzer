@@ -1,7 +1,7 @@
 from common import *
 
 
-def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack_data, top_n_attack_ids):
+def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack_data, top_n_attack_ids, csv_data):
     """Takes raw data and outputs an english description of what occurred"""
     #Incident description
     #   Multiple attacks were detected on site _____
@@ -192,37 +192,62 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                     )}
                 </td>
             </tr>
+            """
 
-            <!-- Peak Traffic Rate -->
-            <tr style="border: none;">
-                <td style="border: none; text-align: right;"><strong>Peak Traffic Rate:</strong></td>
-                <td style="border: none; text-align: left;">
-                    <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
-                    <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
-                </td>
-            </tr>
-
-            <!-- Attacked Destinations -->
-            <tr style="border: none;">
-                <td style="border: none; text-align: right;"><strong>Attacked Destinations:</strong></td>
-                <td style="border: none; text-align: left;">
-                    Attacks were identified against <strong>{len(attacked_destinations)} destination IP address{'es' if len(attacked_destinations) != 1 else ''}</strong> and <strong>{len(destination_ports)} destination port{'s' if len(destination_ports) != 1 else ''}.</strong><br>
-                    Target IPs: {", ".join(attacked_destinations)}<br>
-                    Target Ports: {", ".join(destination_ports)}
-                </td>
-            </tr>
-
-            <!-- Attack Sources -->
-            <tr style="border: none;">
-                <td style="border: none; text-align: right;"><strong>Attack Sources:</strong></td>
-                <td style="border: none; text-align: left;">
-                    Sampled data includes attacks from <strong>at least {len(attack_sources)} unique source IP addresses</strong><br>
-                    <!--{", ".join(attack_sources)}-->
-                </td>
-            </tr>"""
-        try:
+        if peak_traffic['bps'] > 0:
             output += f"""
-
+            <!-- Peak Traffic Rate -->
+                <tr style="border: none;">
+                    <td style="border: none; text-align: right;"><strong>Peak Traffic Rate:</strong></td>
+                    <td style="border: none; text-align: left;">
+                        <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
+                        <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
+                    </td>
+                </tr>
+                """
+        if len(csv_data) == 0:
+            #Not manual mode
+            output += f"""
+                <!-- Attacked Destinations -->
+                <tr style="border: none;">
+                    <td style="border: none; text-align: right;"><strong>Attacked Destinations:</strong></td>
+                    <td style="border: none; text-align: left;">
+                        Attacks were identified against <strong>{len(attacked_destinations)} destination IP address{'es' if len(attacked_destinations) != 1 else ''}</strong> and <strong>{len(destination_ports)} destination port{'s' if len(destination_ports) != 1 else ''}.</strong><br>
+                        Target IPs: {", ".join(attacked_destinations)}<br>
+                        Target Ports: {", ".join(destination_ports)}
+                    </td>
+                </tr>
+                """
+        else:
+            #manual mode
+            output += f"""
+                <!-- Attacked Destinations -->
+                <tr style="border: none;">
+                    <td style="border: none; text-align: right;"><strong>Attacked Destinations:</strong></td>
+                    <td style="border: none; text-align: left;">
+                        Attacks were identified against <strong>{len(csv_data['Destination IP Address'])} destination IP address{'es' if len(csv_data['Destination IP Address']) != 1 else ''}</strong> and <strong>{len(csv_data['Destination Port'])} destination port{'s' if len(csv_data['Destination Port']) != 1 else ''}.</strong><br>
+                        <strong>Target IPs:</strong> {"; ".join(f"{ip}{' (' + str(count) + ' times)' if int(count) > 1 else ''}" for ip, count in csv_data["Destination IP Address"].items())}<br>
+                        <strong>Target Ports:</strong> {"; ".join(f"{port}{' (' + str(count) + ' times)' if int(count) > 1 else ''}" for port, count in csv_data["Destination Port"].items())}
+                    </td>
+                </tr>
+                """
+#Include '(1 time) for ips and ports
+#                        <strong>Target IPs:</strong> {"; ".join(f"{ip} ({count} time{'s' if int(count) != 1 else ''})" for ip, count in csv_data["Destination IP Address"].items())}<br>
+#                        <strong>Target Ports:</strong> {"; ".join(f"{port} ({count} time{'s' if int(count) != 1 else ''})" for port, count in csv_data["Destination Port"].items())}
+        if attack_sources != ['0.0.0.0']:
+            output += f"""
+                <!-- Attack Sources -->
+                <tr style="border: none;">
+                    <td style="border: none; text-align: right;"><strong>Attack Sources:</strong></td>
+                    <td style="border: none; text-align: left;">
+                        Sampled data includes attacks from <strong>at least {len(attack_sources)} unique source IP addresses</strong><br>
+                        <!--{", ".join(attack_sources)}-->
+                    </td>
+                </tr>
+                """
+        
+        if len(csv_data) == 0:
+            output += f"""
             <!-- Attack Protocols -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>Attack Protocols:</strong></td>
@@ -231,7 +256,25 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                     By packet count: {", ".join([f"{key}({value / included_packets * 100:.2f}%)" for key, value in protocols_packets.items()])} <br>
                 </td>
             </tr>
-
+            """
+        else:
+            output += f"""
+            <!-- Attack Protocols -->
+            <tr style="border: none;">
+                <td style="border: none; text-align: right;"><strong>Attack Protocols:</strong></td>
+                <td style="border: none; text-align: left;">
+                    <strong>All:</strong><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;By attack count:  {"; ".join(f"{protocol} ({format(value, ',')} attacks)" for protocol, value in csv_data["Protocol"].items())}<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;By bandwidth:  {"; ".join(f"{protocol} ({format(value/1000, ',.2f').rstrip('0').rstrip('.')} Mb)" for protocol, value in csv_data["Protocol Kbits"].items())}<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;By packet count:  {"; ".join(f"{protocol} ({format(value, ',')} packets)" for protocol, value in csv_data["Protocol Packets"].items())}<br>
+                    <strong>Top 40:</strong><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;By bandwidth: {", ".join([f"{key}({value / included_bw * 100:.2f}%)" for key, value in protocols_bw.items()])} <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;By packet count: {", ".join([f"{key}({value / included_packets * 100:.2f}%)" for key, value in protocols_packets.items()])} <br>
+                </td>
+            </tr>
+            """
+        try:
+            output += f"""
             <!-- TopN Analysis -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right;"><strong>TopN Coverage:</strong></td>

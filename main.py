@@ -27,6 +27,7 @@ from common import *
 
 collect_data=True
 parse_data=True
+csv_attack_data = {}
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
         update_log("Creating/clearing temp folder")
@@ -97,8 +98,16 @@ if __name__ == '__main__':
                                     with z.open(inner_file) as csv_file:
                                         text_file = io.TextIOWrapper(csv_file, encoding='utf-8')
                                         update_log(f'     \033[92mSuccess!\033[0m')
-                                        dp_list_temp, this_epoch_from_time, this_epoch_to_time = data_parser.parse_csv(text_file)
+                                        dp_list_temp, this_epoch_from_time, this_epoch_to_time, new_csv_attack_data = data_parser.parse_csv(text_file)
                                         dp_list_ip.update(dp_list_temp)
+                                        
+                                        #Merge new_csv_attack_data into csv_attack_data
+                                        #new_csv_attack_data = {"Destination IP Address": {"1.2.3.4": "15", "Multiple": "25333", "5.6.7.8": "7"},"Other Thing": {"2.3.4.5": "22", "3.4.5.6": "100"}}
+                                        for key, values in new_csv_attack_data.items():
+                                            inner = csv_attack_data.setdefault(key, {})
+                                            for index, innerval in values.items():
+                                                inner[index] = int(inner.get(index, 0)) + int(innerval)
+
                                         if not 'epoch_from_time' in locals() or this_epoch_from_time < epoch_from_time:
                                             epoch_from_time = int(this_epoch_from_time)
                                         if not 'epoch_to_time' in locals() or this_epoch_to_time < epoch_to_time:
@@ -124,8 +133,13 @@ if __name__ == '__main__':
                 update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
                 print("The script will now exit.")
                 exit(0)
-            
             #end of manual/offline file processing
+            #Sort the attack data 
+            for outer_key, inner_dict in csv_attack_data.items():
+                csv_attack_data[outer_key] = dict(
+                    sorted(inner_dict.items(), key=lambda item: int(item[1]), reverse=True)
+                )
+            
         else:
             #Not manual mode
             update_log("Beginning data collection")
@@ -189,7 +203,6 @@ if __name__ == '__main__':
             #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
             result = data_parser.parse_log_file(file, syslog_ids)
-            
             all_results.update(result)
             #print(f"Result for {file}: {result}")
         #
@@ -217,7 +230,8 @@ if __name__ == '__main__':
                 'count_above_threshold': count_above_threshold
             }, file, ensure_ascii=False, indent=4)
 
-        if 'v' in locals():
+        if len(csv_attack_data) == 0:#Check if we're in manual mode
+            print("Retreiving sample data")
             bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
         else:
             bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = None, None, None, None, None, None
@@ -236,7 +250,7 @@ if __name__ == '__main__':
         #print(metrics)
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attack_graph_data = {}
-        if 'v' in locals():
+        if len(csv_attack_data) == 0:#Check if we're in manual mode
             for syslogID, details in syslog_details.items():
                 if details.get('graph', False):
                     attackData = v.getRawAttackSSH(details['Attack ID'])
@@ -251,7 +265,7 @@ if __name__ == '__main__':
             json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
 
         #Get the overall attack rate graph data for the specified time period
-        if 'v' in locals():
+        if len(csv_attack_data) == 0:#Check if we're in manual mode
             selectedDevices = []
             if len(device_ips) > 0:
                 for ip in device_ips:
@@ -269,7 +283,7 @@ if __name__ == '__main__':
         
         #Save a file with the details of the current run.
             #altenate datetime format .strftime('%a, %d %b %Y %H:%M:%S %Z')
-        if 'v' in locals():
+        if len(csv_attack_data) == 0:#Check if we're in manual mode
             cc_details = f"\nVision / Cyber Controller IP: {v.ip}"
             dp_details = f"""DPs: {", ".join(f"{dp_list_ip.get(ip, {}).get('name', 'N/A')}({ip})" for ip in device_ips if ip in dp_list_ip) or 'None'}"""
         else:
@@ -353,7 +367,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         update_log("Generating attack summary")
         htmlSummary = '\n<h2 style="text-align: center;">Attack Summary</h2>'
-        htmlSummary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids) 
+        htmlSummary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids, csv_attack_data) 
         finalHTML += htmlSummary
 
         #Create the two graphs at the top of the HTML file
