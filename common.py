@@ -3,6 +3,10 @@ import datetime
 import sys
 import re
 import os
+import io
+import json
+import math
+from typing import Union
 
 args = sys.argv.copy()
 script_filename = args.pop(0)
@@ -192,3 +196,64 @@ class color:
     CYAN = "\033[96m"
     WHITE = "\033[97m"
     BOLD = "\033[1m"
+
+def friendly_bits(bits: int | float | str, precision: int = 3, base: float = 1000.0, is_rate: bool = False) -> str:
+    """
+    Ingests a large number and outputs the number in the largest SI unit:
+    Bits, Kb, Mb, Gb, Tb, Petabits, Exabits
+
+    :param bits: Number of bits (can be int or float).
+    :param precision: Optional: default 3. Max decimal places to show (without trailing zeros).
+    :param base: Optional: default 1000.0, You may prefer to use 1024.0.
+    :param is_rate: Optional: if true, returns a rate instead of a standalone value. Kbps instead of Kb
+    :return: e.g., "1.23 Gb", "987 Mb", "432 Bits"
+    """
+
+    if is_rate:
+        units = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps"]
+    else:
+        units = ["Bit", "Kb", "Mb", "Gb", "Tb", "Petabit", "Exabit"]
+    
+    original_str = str(bits)
+
+    if isinstance(bits, str):
+        s = bits.strip().replace(",", "").replace("_", "")
+    else:
+        s = bits
+
+    try:
+        num = float(s)
+    except (ValueError, TypeError):
+        return original_str
+        
+     # Validate value/base
+    if not math.isfinite(num):
+        return original_str
+    if base <= 1:
+        base = 1000.0  # sane fallback
+
+    # Handle sign and magnitude
+    sign = "-" if num < 0 else ""
+    value = abs(num)
+
+    # Scale to largest unit
+    unit_idx = 0
+    while value >= base and unit_idx < len(units) - 1:
+        value /= base
+        unit_idx += 1
+
+    # Format with commas, trim trailing zeros
+    number_string = f"{value:.{precision}f}".rstrip("0").rstrip(".")
+    if "." in number_string:
+        int_part, frac = number_string.split(".", 1)
+        int_part = f"{int(int_part):,}"
+        number_string = f"{int_part}.{frac}"
+    else:
+        number_string = f"{int(number_string):,}"
+    
+    # Add plural 's' if [bit, petabit, or exabit] and value >= 2
+    unit_name = units[unit_idx]
+    if unit_idx in (0,5,6) and (number_string != "1") and not is_rate:
+        unit_name += "s"
+
+    return f"{sign}{number_string} {unit_name}"

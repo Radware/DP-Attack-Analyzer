@@ -16,7 +16,7 @@ def getHeader(stats):
         <td width="50%" style="text-align: center; vertical-align: top; border: none;">{logo()}</td>
         <td width="50%" style="border: none; text-align: left;">
 {stats}  
-      </td>
+        </td>
       </tr>
     </table>
     <script type="text/javascript">
@@ -87,6 +87,22 @@ def getCSS():
             font-size: 12px;
             font-weight: bold;
             margin-left: 5px;
+        }
+        .sticky-title th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            font-size: 1.5em;   /* match <h2> size */
+            font-weight: bold;  /* match <h2> weight */
+            text-align: center;
+            padding: 8px;
+            box-shadow: 0 1px 0 #000;
+        }
+        .sticky-cols th {
+            position: sticky;
+            top: 2.5em; /* adjust if title row height changes */
+            z-index: 2;
+            box-shadow: 0 1px 0 #000;
         }
     </style>"""
 def favicon():

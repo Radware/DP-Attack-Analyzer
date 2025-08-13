@@ -18,10 +18,11 @@
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
 
 # How to run
-	The script can be run in three modes:
+	The script can be run in four modes:
 		- Interactive (without command line arguments)
 		- Automated, using command line arguments and cached settings from previous runs
 		- Automated, using a json list for the arguments
+		- Manually Collected Files from Cyber Controller (Tech support and forensics)
 	
 	Optional:
 		Config.ini is automatically generated during the script's first execution. It contains multiple customizations that can improve the final product. These include:
@@ -81,9 +82,22 @@
 						"value" - Varieant based on type specified. If selected type requires multiple inputs, place them in a list [StartTime, Endtime]
 					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
 				See the included launcher.json.example for a sample.
-
+		
+		Manually Collected Files from Cyber Controller (Tech support and forensics):
+			1. Collect a techsupport file and a forensics report from one or more defensepro appliances.
+			2. Place the TechSupport .tgz and Forensics .zip or .csv files in the ./Manual/ folder
+			3. Run the script with the '--manually-collected' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.1 - 13 August 2025 (Steve)
+		Additional manual mode improvements
+		Moved PPS and BPS data tables into a loop that executes twice.
+		Moved get_top_n from html_data.py to data_parser.py
+		Small one-time-use data_parser.py helper functions moved into their host function.
+		Data table Header row is now 'sticky'
+		Data in the 'Max Attack Rate' column will have data labels instead of all being unlabeled 'Gbps'
+		IPQualityScore limit reached messages will now only appear once per IP.
+		Fixed a bug where the first IP looked up after the limit was reached would have it's cache erased.
 	v1.1.0 - 9 July 2025 (Steve)
 		Added manual mode for running the script externally against previously (manually) collected support and bdos files.
 			Manual mode files should be placed in ./Manual/

@@ -5,44 +5,9 @@ import time
 import math
 
 
-# def get_outer_times(data):
-#     min_start_time = float('inf')
-#     max_end_time = float('0')
-
-#     for key, value in data.items():
-#         start_time = datetime.strptime(value['Start Time'], '%d-%m-%Y %H:%M:%S')
-#         end_time = datetime.strptime(value['End Time'], '%d-%m-%Y %H:%M:%S')
-
-#         start_epoch = time.mktime(start_time.timetuple())
-#         end_epoch = time.mktime(end_time.timetuple())
-
-#         if start_epoch < min_start_time:
-#             min_start_time = start_epoch
-#         if end_epoch > max_end_time:
-#             max_end_time = end_epoch
-#     return (min_start_time, max_end_time)
-
-
-def makeEmptyList(minTime, maxTime, entries):
-    '''Initialize our table. First row will be headers. First entry will be "Timestamp". Each row will start with a timestamp value.'''
-    out = []
-    out.append(["TimeStamp"])
-    duration = float(maxTime - minTime)
-    interval = float(duration / entries)
-    for x in range(0, entries):
-        out.append([math.ceil(minTime + (x * interval))])
-    pass
-    return out
-
-
-def TEMP_PopulateData():
-    return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
-
-
-def graphPrerequesites():
-    outStr = ""
+def graphPrerequisites():
     #Workaround function to prevent google charts from auto-converting timezones to local time.
-    outStr += """
+    outStr = """
 <script type="text/javascript">
     function correctedDate(inputTime) {
     var date = new Date(inputTime);
@@ -56,6 +21,45 @@ def graphPrerequesites():
 
 
 def createTopGraphsHTML(BPSjson,PPSjson):
+    
+    def OptionsHTML(Title):
+        output =  """
+            var options = {
+                title: '"""
+        output += Title
+        output +="""',
+                curveType: 'function',
+                width: '100%',
+                legend: {
+                    position: 'top',
+                    textStyle: { fontSize: 12 },
+                    maxLines: 6
+                },
+                annotations: { style: 'line'},
+                displayAnnotations: true,
+                focusTarget: 'category',
+                vAxis: {
+                    viewWindow: {min:0}
+                },
+                hAxis: {format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45, title: 'Time (UTC)',},
+                series: {
+                    0: { labelInLegend: 'Challenged', color: "#ff8f00"},
+                    1: { labelInLegend: 'Excluded', color: "#807be0"},
+                    2: { labelInLegend: 'Received', color: "#088eb1"},
+                    3: { labelInLegend: 'Dropped', color: "#f41414"},
+                },
+                tooltip: {
+                    isHtml: true,
+                    format: 'MMM d, y, HH:mm:ss'  // Ensure full date and time are shown in the tooltip
+                },
+                explorer: {
+                    actions: ['dragToZoom', 'rightClickToReset'],
+                    axis: 'horizontal',
+                    keepInBounds: true,
+                    maxZoomIn: 40.0
+                }
+            };"""
+        return output
     outStr = """
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
@@ -98,50 +102,9 @@ def createTopGraphsHTML(BPSjson,PPSjson):
 """
     return outStr
 
-
-def OptionsHTML(Title):
-    output =  """
-        var options = {
-            title: '"""
-    output += Title
-    output +="""',
-            curveType: 'function',
-            width: '100%',
-            legend: {
-                position: 'top',
-                textStyle: { fontSize: 12 },
-                maxLines: 6
-            },
-            annotations: { style: 'line'},
-            displayAnnotations: true,
-            focusTarget: 'category',
-            vAxis: {
-                viewWindow: {min:0}
-            },
-            hAxis: {format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45, title: 'Time (UTC)',},
-            series: {
-                0: { labelInLegend: 'Challenged', color: "#ff8f00"},
-                1: { labelInLegend: 'Excluded', color: "#807be0"},
-                2: { labelInLegend: 'Received', color: "#088eb1"},
-                3: { labelInLegend: 'Dropped', color: "#f41414"},
-            },
-            tooltip: {
-                isHtml: true,
-                format: 'MMM d, y, HH:mm:ss'  // Ensure full date and time are shown in the tooltip
-            },
-            explorer: {
-                actions: ['dragToZoom', 'rightClickToReset'],
-                axis: 'horizontal',
-                keepInBounds: true,
-                maxZoomIn: 40.0
-            }
-        };"""
-    return output
-    
-
 #def createChart(Title, myData, epoch_from, epoch_to):
 def createChart(Title, myData):
-    """Creates an individual attack graph"""
+    """Creates a graph for an individual attack """
     name = f'graph_{Title.replace(" ","_").replace("-","_")}'
 
     # Sort the data by the timestamp
@@ -269,56 +232,11 @@ def createChart(Title, myData):
     """
     return html_content
 
-def pad_with_zeros(myData):
-    for key, dataset in myData.items():
-        data = dataset.get("data", [])
-        
-        if len(data) > 1:  # Only process if more than one row exists
-            # Ensure sorting by timestamp before processing
-            sorted_data = sorted(data, key=lambda x: x["row"]["timeStamp"])
-            
-            # Check if the first row has Bps: 0 and Pps: 0 or time difference is too small
-            first_row = sorted_data[0]["row"]
-            second_row_time = sorted_data[1]["row"]["timeStamp"] if len(sorted_data) > 1 else None
-            if first_row["Bps"] != 0 or first_row["Pps"] != 0 or (second_row_time and (second_row_time - first_row["timeStamp"] < 7500)):
-                # Create a new row with timestamp 15 seconds earlier
-                new_row = {
-                    "row": {
-                        "timeStamp": first_row["timeStamp"] - 15000,
-                        "Bps": 0,
-                        "Pps": 0
-                    }
-                }
-                
-                # Insert at the beginning
-                sorted_data.insert(0, new_row)
-
-            # Check if the last row has Bps: 0 and Pps: 0 or time difference is too small
-            last_row = sorted_data[-1]["row"]
-            second_to_last_time = sorted_data[-2]["row"]["timeStamp"] if len(sorted_data) > 1 else None
-            if last_row["Bps"] != 0 or last_row["Pps"] != 0 or (second_to_last_time and (last_row["timeStamp"] - second_to_last_time < 7500)):
-                # Create a new row with timestamp 15 seconds later
-                new_row = {
-                    "row": {
-                        "timeStamp": last_row["timeStamp"] + 15000,
-                        "Bps": 0,
-                        "Pps": 0
-                    }
-                }
-                
-                # Append at the end
-                sorted_data.append(new_row)
-            
-            # Update the dataset with sorted and modified data
-            dataset["data"] = sorted_data
-    
-    return myData
-
-
 
 def createCombinedChart(Title, myData):
     """
-    Build HTML+JS to render a combined Google Chart with PPS/BPS lines
+    Build HTML+JS to create a Google Chart with PPS/BPS lines
+    Combines multiple attacks into one.
     
     myData structure example:
       {
@@ -340,6 +258,52 @@ def createCombinedChart(Title, myData):
     out_datasets = {}
     metadata_map = {}
 
+    def pad_with_zeros(myData):
+        """Make sure each line to be graphed starts and ends with 0.
+        Adds 0s where necessary"""
+        for key, dataset in myData.items():
+            data = dataset.get("data", [])
+            
+            if len(data) > 1:  # Only process if more than one row exists
+                # Ensure sorting by timestamp before processing
+                sorted_data = sorted(data, key=lambda x: x["row"]["timeStamp"])
+                
+                # Check if the first row has Bps: 0 and Pps: 0 or time difference is too small
+                first_row = sorted_data[0]["row"]
+                second_row_time = sorted_data[1]["row"]["timeStamp"] if len(sorted_data) > 1 else None
+                if first_row["Bps"] != 0 or first_row["Pps"] != 0 or (second_row_time and (second_row_time - first_row["timeStamp"] < 7500)):
+                    # Create a new row with timestamp 15 seconds earlier
+                    new_row = {
+                        "row": {
+                            "timeStamp": first_row["timeStamp"] - 15000,
+                            "Bps": 0,
+                            "Pps": 0
+                        }
+                    }
+                    
+                    # Insert at the beginning
+                    sorted_data.insert(0, new_row)
+
+                # Check if the last row has Bps: 0 and Pps: 0 or time difference is too small
+                last_row = sorted_data[-1]["row"]
+                second_to_last_time = sorted_data[-2]["row"]["timeStamp"] if len(sorted_data) > 1 else None
+                if last_row["Bps"] != 0 or last_row["Pps"] != 0 or (second_to_last_time and (last_row["timeStamp"] - second_to_last_time < 7500)):
+                    # Create a new row with timestamp 15 seconds later
+                    new_row = {
+                        "row": {
+                            "timeStamp": last_row["timeStamp"] + 15000,
+                            "Bps": 0,
+                            "Pps": 0
+                        }
+                    }
+                    
+                    # Append at the end
+                    sorted_data.append(new_row)
+                
+                # Update the dataset with sorted and modified data
+                dataset["data"] = sorted_data
+        
+        return myData
     pad_with_zeros(myData)
 
     for dataset_name, dataset_data in myData.items():
@@ -569,207 +533,6 @@ def createCombinedChart(Title, myData):
     </script>
     """
     return out_html
-
-
-def createCombinedChartOld(Title, myData):
-    # Generate a random ID for the chart name
-    rand_ID = random.randrange(100000000, 999999999)
-    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
-
-    # Function to round timestamp to the nearest 15 seconds
-    def round_to_nearest_15_seconds(timestamp):
-        return round(timestamp / 15000) * 15000
-
-    # Collect all timestamps from all datasets, rounding them to the nearest 15 seconds
-    timestamps = sorted(set(round_to_nearest_15_seconds(item["row"]["timeStamp"]) for dataset in myData.values() for item in dataset["data"]))
-
-    # Initialize data structure for Google Charts
-    data_table = [["Timestamp"]]
-    dataset_headers = {}
-
-    # Add headers for each dataset and metric
-    for dataset_name, dataset in myData.items():
-        dataset_headers[dataset_name] = []
-        try:
-            for key in dataset["data"][0]["row"].keys():
-                if key != "timeStamp":
-                    column_name = f"{dataset_name.replace('_', '__')}__{key}"
-                    data_table[0].append(column_name)
-                    dataset_headers[dataset_name].append(column_name)
-        except:
-            print(f"Unexpected error processing {dataset_name}")
-            raise
-
-    # Populate data rows based on rounded timestamps
-    for timestamp in timestamps:
-        #date_object = f"new Date({timestamp} + (new Date().getTimezoneOffset() * 60000))"
-        date_object = f"correctedDate({timestamp})"
-        row = [date_object] + [None] * (len(data_table[0]) - 1)
-        
-        for dataset_name, dataset in myData.items():
-            for item in dataset["data"]:
-                rounded_time = round_to_nearest_15_seconds(item["row"]["timeStamp"])
-                if rounded_time == timestamp:
-                    for key, value in item["row"].items():
-                        if key != "timeStamp" and value is not None:
-                            try:
-                                numeric_value = float(value)
-                                col_index = data_table[0].index(f"{dataset_name.replace('_', '__')}__{key}")
-                                row[col_index] = numeric_value
-                            except ValueError:
-                                continue
-                    break
-        
-        data_table.append(row)
-
-    # Convert data_table to JSON and replace the quotes around Date objects
-    json_data = json.dumps(data_table[1:])
-    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
-
-
-    # Generate HTML content dynamically with checkboxes and Date objects for x-axis
-    html_content = f"""
-        <script type="text/javascript">
-            //google.charts.load('current', {{'packages':['corechart']}});
-            google.charts.setOnLoadCallback(drawChart);
-
-            let data;
-            let chart;
-            let bpsView;
-            let ppsView;
-            let options = {{
-                title: '{Title}',
-                curveType: 'function',
-                legend: {{
-                    position: 'top',
-                    textStyle: {{ fontSize: 12 }},
-                    maxLines: 6
-                }},
-                hAxis: {{
-                    title: 'Time (UTC)',
-                    format: 'HH:mm:ss',
-                    slantedText: true,
-                    slantedTextAngle: 45
-                }},
-                vAxis: {{
-                    viewWindow: {{min: 0}}  // Ensure the y-axis includes 0
-                }},
-                focusTarget: 'category',
-                interpolateNulls: true,
-                tooltip: {{
-                    isHtml: true
-                }},
-                series: {{
-                    {", ".join([f"{i}: {{ lineDashStyle: [0, 0] }}" for i in range(len(data_table[0]) - 1)])} 
-                }},
-                colors: [
-                    '#e74c3c', // Red
-                    '#3498db', // Blue
-                    '#2ecc71', // Emerald Green
-                    '#f39c12', // Yellow
-                    '#8e44ad', // Purple
-                    '#1abc9c', // Turquoise
-                    '#f1c40f', // Bright Yellow
-                    '#e55b1b', // Orange
-                    '#9b59b6', // Amethyst
-                    '#16a085', // Sea Green
-                    '#34495e', // Dark Blue Gray
-                    '#c0392b', // Strong Red
-                    '#9bcf0e', // Lime Green
-                    '#d35400', // Pumpkin
-                    '#2980b9', // Bright Blue
-                    '#f5b041', // Gold
-                    '#4f81bd', // Light Blue
-                    '#95a5a6', // Gray
-                    '#7f8c8d', // Medium Gray
-                    '#f1ca3a', // Light Yellow
-                    '#e2431e', // Dark Red
-                    '#b2c2c8', // Light Gray
-                    '#34495e', // Dark Slate
-                ],
-                animation: {{
-                    duration: 1000,    // Time in milliseconds for the animation (1 second here)
-                    easing: 'inAndOut',     // Easing function for smooth animation ('in', 'out', 'inAndOut' are common options)
-                    startup: false      // Ensures that animation happens on chart load
-                }}
-            }};
-
-            function drawChart() {{
-                data = new google.visualization.DataTable();
-                data.addColumn('datetime', 'Time');
-                {"".join([f"data.addColumn('number', '{col}');" for col in data_table[0][1:]])}
-                data.addRows({json_data});
-                data.setColumnProperty(1, 'color', '#e2431e'); 
-                data.setColumnProperty(2, 'color', '#f1ca3a'); 
-                data.setColumnProperty(3, 'color', '#e2431e'); 
-                data.setColumnProperty(4, 'color', '#f1ca3a'); 
-
-                // Create a DataView for the BPS chart (odd columns)
-                bpsView = new google.visualization.DataView(data);
-                let bpsColumns = [0];  // Start with the timestamp column
-                for (let i = 2; i < data.getNumberOfColumns(); i += 2) {{
-                    bpsColumns.push(i);
-                }}
-                bpsView.setColumns(bpsColumns);
-
-                // Create a DataView for the PPS chart (even columns)
-                ppsView = new google.visualization.DataView(data);
-                let ppsColumns = [0];  // Start with the timestamp column
-                for (let i = 1; i < data.getNumberOfColumns(); i += 2) {{
-                    ppsColumns.push(i);
-                }}
-                ppsView.setColumns(ppsColumns);
-
-                chartbps = new google.visualization.LineChart(document.getElementById('{name}-bps'));
-                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS'}});
-                chartpps = new google.visualization.LineChart(document.getElementById('{name}-pps'));
-                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS'}});
-            }}
-
-            function updateChart() {{
-                //let bpsView = new google.visualization.DataView(data);
-                //let ppsView = new google.visualization.DataView(data);
-                let columns = [];
-                {''.join(
-                    f'if (document.getElementById("{name}_{header}").checked) {{ columns.push({headerindex}); }}' for headerindex, header in enumerate(dataset_headers.keys())
-                )}
-
-                evencolumns = [0, ...columns.map(x => (x+1)*2)];
-                oddcolumns  = [0, ...columns.map(x => x*2 + 1)];
-
-                bpsView.setColumns(evencolumns);
-                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS', colors: columns.map(index => options.colors[index])}});
-                ppsView.setColumns(oddcolumns);
-                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS', colors: columns.map(index => options.colors[index])}});
-                
-            }}
-        </script>
-"""
-    
-    checkboxes_html = ""
-    for header in dataset_headers.keys():
-        checkbox_html = (
-            f'<label>'
-            f'<input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> '
-            f'{header.replace("__", " ").replace("_", " ")}'
-            f'</label>'
-        )
-        checkboxes_html += checkbox_html
-    column_count = (
-        1 if len(dataset_headers) <= 4 else
-        2 if len(dataset_headers) <= 8 else
-        3 if len(dataset_headers) < 13 else
-        4
-    )
-    html_content += f"""
-        <div style="display: grid; grid-template-columns: repeat({column_count}, 1fr); gap: 10px; row-gap: 3px; width:50%;">
-            {checkboxes_html}
-        </div>
-        <div id="{name}-bps" style="width: 100%; height: 500px;"></div>
-        <div id="{name}-pps" style="width: 100%; height: 500px;"></div>
-    """
-    return html_content
-
 
 def createPieCharts(attack_data, top_n_attack_ids):
     """Creates two 3D pie charts for total bandwidth and total packets, showing percentages on the chart and including a legend."""

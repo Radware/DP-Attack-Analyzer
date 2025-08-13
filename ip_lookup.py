@@ -49,13 +49,12 @@ if config.get('Reputation', 'prune_stale_entries', True):
     with open('reputation_cache.json', 'w', encoding='utf-8') as file:
         json.dump(reputation_cache, file, ensure_ascii=False, indent=4)
 
-def get_ip_abuse_data(ip):
+def get_ip_abuse_data(ip, suppressErrors = False):
     cached = reputation_cache.get(ip,{})
     write_updates = False
     #if the cached time is older than 2 weeks (1209600 seconds), update the cache.
     if config.get('Reputation', 'use_abuseipdb', False):
-        if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - int(cached.get('AbuseIPDB',{}).get('cachedAt',0)) > 1209600:
-            global AbuseIPDB_limit_reached
+        if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - int(cached.get('AbuseIPDB',{}).get('cachedAt',0)) > 14*24*60*60:
             if AbuseIPDB_limit_reached == False:
                 try:
                     abuse_ip_db_response = abuse_ip_db_call(ip)
@@ -71,14 +70,13 @@ def get_ip_abuse_data(ip):
         #else:
         #    update_log(f"    AbuseIPDB cached data for {ip} is less than 2 weeks old. Using cache")
     if config.get('Reputation', 'use_ipqualityscore', False):
-        if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - cached.get('IPQualityScore',{}).get('cachedAt',0) > 1209600:
-        
+        if int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - int(cached.get('IPQualityScore',{}).get('cachedAt',0)) > 14*24*60*60:
             global IPQualityScore_limit_reached
             if IPQualityScore_limit_reached == False:
                 try:
                     ip_quality_score_response = ip_quality_score_call(ip)
-                    cached['IPQualityScore'] = ip_quality_score_response
                     if ip_quality_score_response.get('success'):
+                        cached['IPQualityScore'] = ip_quality_score_response
                         cached['IPQualityScore']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
                         write_updates = True
                     else:
@@ -92,9 +90,9 @@ def get_ip_abuse_data(ip):
                     update_log(f"    Error retreiving IPQualityScore info for {ip}. Type: {type(e).__name__}, Error: {e}")
             else:
                 if cached.get('IPQualityScore',{}).get('cachedAt',0) > 0:
-                    update_log(f"    Ipqualityscore.com limit reached. Stale cached data will be used for {ip}.")
+                    update_log(f"    Ipqualityscore.com limit reached. Stale cached data will be used for {ip}.", toconsole=suppressErrors)
                 else:
-                    update_log(f"    Ipqualityscore.com limit reached. No cached data is available for {ip}.")
+                    update_log(f"    Ipqualityscore.com limit reached. No cached data is available for {ip}.", toconsole=suppressErrors)
         #else:
         #    update_log(f"    IPQualityScore cached data for {ip} is less than 2 weeks old. Using cache")
 
