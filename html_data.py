@@ -151,7 +151,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     <td>{details.get('Action', 'N/A')}</td>
                     {attack_status_td}
                     <!-- <td>{details.get('Max_Attack_Rate_Gbps', 'N/A')}</td> -->
-                    <td>{friendly_bits(float(details.get('Max_Attack_Rate_Gbps', 'N/A')) * 1_000_000_000, is_rate=True)}</td>
+                    <td>{friendly_bits(float(details.get('Max_Attack_Rate_Gbps', 0)) * 1_000_000_000, is_rate=True)}</td>
                     <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                     <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                     <td>

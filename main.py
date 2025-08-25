@@ -41,7 +41,7 @@ if __name__ == '__main__':
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    update_log(f"Failed to delete {file_path}. Reason: {e}")
+                    update_log(f"  Failed to delete {file_path}. Reason: {e}")
             log_state = 1
         else:
             # Create the temp folder if it doesn't exist
@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 foundzip = False
                 for filename in os.listdir(manual_folder):
                     file_path = os.path.join(manual_folder, filename)
-                    if ".tar.gz" in filename:
+                    if filename.endswith(".tar.gz"):
                         update_log(f'Processing {file_path}')
                         #Do tar support file stuff
                         with tarfile.open(file_path,'r:gz') as outer_tgz:
@@ -124,20 +124,22 @@ if __name__ == '__main__':
                                         break
                             else:
                                 update_log(f"WARNING: CSV not found in {file_path}")
-                if not foundtgz:
-                    update_log(f"{color.YELLOW}Warning:{color.RESET} Forensics with attack details not found.")
-                    update_log("  Including forensics with attack details .tar.gz files in the ./Manual/ folder will enhance the report.")
+                    else:
+                        update_log(f"Notice: file {filename} in {manual_folder} does not end in .zip or .tar.gz and will be ignored")
                 if not foundzip:
+                    update_log(f"{color.YELLOW}Warning:{color.RESET} Forensics with attack details file not found.")
+                    update_log("  Including forensics with attack details .zip files in the ./Manual/ folder will enhance the report.")
+                if not foundtgz:
                     update_log(f"{color.RED}Error:{color.RESET} DefensePro Support file not found!")
-                    update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
-                    print("The script will now exit.")
+                    update_log("Please place at least one DefensePro Support .tar.gz file and forensics with attack details .zip file in the ./Manual/ folder.")
+                    update_log("The script will now exit.")
                     exit(0)
             else:
                 #manual folder doesn't exist! Create it and exit
                 os.makedirs(manual_folder)
                 update_log(f"{color.RED}Error{color.RESET} The ./Manual/ folder did not exist and has been created for you.")
-                update_log("Please place at least one DefensePro Support .zip file and forensics with attack details .tar.gz file in the ./Manual/ folder.")
-                print("The script will now exit.")
+                update_log("Please place at least one DefensePro Support .tgz file and forensics with attack details .zip file in the ./Manual/ folder.")
+                update_log("The script will now exit.")
                 exit(0)
             #end of manual/offline file processing
             #Sort the attack data 

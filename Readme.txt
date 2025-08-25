@@ -83,12 +83,14 @@
 					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
 				See the included launcher.json.example for a sample.
 		
-		Manually Collected Files from Cyber Controller (Tech support and forensics):
+		Manually Collected Files (Tech support and forensics):
 			1. Collect a techsupport file and a forensics report from one or more defensepro appliances.
-			2. Place the TechSupport .tgz and Forensics .zip or .csv files in the ./Manual/ folder
-			3. Run the script with the '--manually-collected' flag. Ex: 'python.exe main.py --manually-collected'
+			2. Place the TechSupport .tgz and Forensics .zip files in the ./Manual/ folder
+			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.2 - 25 August 2025(Steve)
+		Bugfixes
 	v1.1.1 - 13 August 2025 (Steve)
 		Additional manual mode improvements
 		Moved PPS and BPS data tables into a loop that executes twice.

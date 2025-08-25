@@ -21,17 +21,34 @@ if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)
 
 
+
 log_cache = ""
 log_state = 0
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 def update_log(message, newline=True, toconsole=True):
     global log_cache, log_state
     end_char = '\n' if newline else ''
-    if toconsole:
-        print(message, end=end_char, flush=True)
 
+    def supports_color():
+        import sys, os
+        if not sys.stdout.isatty():
+            return False
+        if os.environ.get("TERM") == "dumb":
+            return False
+        if "NO_COLOR" in os.environ:
+            return False
+        return True
+
+    clean_message = ansi_escape.sub('', message)
+
+    if toconsole:
+        if supports_color():
+            print(message, end=end_char, flush=True)
+        else:
+            print(clean_message, end=end_char, flush=True)
+            
     with(open(log_file,"w" if log_state == 1 else "a")) as file:
-        clean_message = ansi_escape.sub('', message)
+        
         log_entry = f"[{datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}] {clean_message}{end_char}"
         log_cache += log_entry
         if log_state == 1:

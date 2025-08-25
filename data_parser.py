@@ -246,7 +246,7 @@ def parse_response_file():
             try:
                 Max_Attack_Rate_Gbps = float(Max_Attack_Rate_BPS) / 1_000_000_000
             except:
-                Max_Attack_Rate_Gbps = 'N/A.'
+                Max_Attack_Rate_Gbps = 0
             # Convert epoch times to datetime
 
             def epoch_to_datetime(epoch_time):

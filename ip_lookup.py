@@ -137,7 +137,7 @@ def abuse_ip_db_call(ipAddress):
             'http': config.get('Reputation', 'http_proxy_address', 'http://your_proxy_url'),
             'https': config.get('Reputation', 'https_proxy_address', 'https://your_proxy_url')
         }
-        update_log(f"  Querying api.abuseipdb.com for {ipAddress}")
+        update_log(f"    Querying api.abuseipdb.com for {ipAddress}")
         try:
             if enable_proxy:
                 # 5 seconds for connect timeout, 15 seconds for read timeout
@@ -146,18 +146,18 @@ def abuse_ip_db_call(ipAddress):
                 response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"AbuseIPDB responded with status {response.status_code}: {response.text}")
-            update_log(f"    Response object: {response}")
+            update_log(f"      Response object: {response}")
         except Exception as e:
-            update_log(f"Exception occurred during AbuseIPDB request: {e}")
+            update_log(f"  Exception occurred during AbuseIPDB request: {e}")
             update_log(f"     url: {url}")
             update_log(f"     headers: {headers}")
             update_log(f"     querystring: {querystring}")
             update_log(f"     Text: {response.text}")
             if 'response' in locals() and response is not None:
-                update_log("Partial response info (if available):")
-                update_log(f"  Status Code: {response.status_code}")
-                update_log(f"  Reason: {response.reason}")
-                update_log(f"  Text: {response.text}")
+                update_log("    Partial response info (if available):")
+                update_log(f"    Status Code: {response.status_code}")
+                update_log(f"    Reason: {response.reason}")
+                update_log(f"    Text: {response.text}")
             return None
         
         # Formatted output
@@ -166,7 +166,7 @@ def abuse_ip_db_call(ipAddress):
 
         return decodedResponse
     else:
-        update_log('Error: Missing abuseipdb API Key')
+        update_log('  Error: Missing abuseipdb API Key')
         return 'Missing abuseipdb API Key'
 
 

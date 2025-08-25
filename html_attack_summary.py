@@ -39,8 +39,9 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             attack_name = attack[1]["Attack Name"]
             if vectors.get(attack_name, None) is None:
                 vectors[attack_name] = {}
-            vectors[attack_name]['gbps'] = vectors[attack_name].get('gbps',0) + attack[1]['Max_Attack_Rate_Gbps']
-            vectors[attack_name]['highest_gbps'] = max(vectors[attack_name].get('highest_gbps',0), attack[1]['Max_Attack_Rate_Gbps'])
+            num = float(attack[1]['Max_Attack_Rate_Gbps']) if attack[1]['Max_Attack_Rate_Gbps'] != "N/A" else 0
+            vectors[attack_name]['gbps'] = vectors[attack_name].get('gbps',0) + num
+            vectors[attack_name]['highest_gbps'] = max(vectors[attack_name].get('highest_gbps',0), num)
             
     sorted_vectors = sorted(vectors.items(), key=lambda x: x[1]['highest_gbps'], reverse=True)
 
@@ -194,7 +195,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             </tr>
             """
 
-        if int(peak_traffic['bps'].replace(',', '')) > 0:
+        if int(str(peak_traffic['bps']).replace(',', '')) > 0:
             output += f"""
             <!-- Peak Traffic Rate -->
                 <tr style="border: none;">
@@ -238,11 +239,11 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                                 <table style="border-collapse: separate; border-spacing: 0; width: auto; margin: 0 auto;">
                                     <thead>
                                     <tr>
-                                        <th colspan="2" style="text-align: center; padding: 4px 6px; position: sticky; top: 0; background: white; z-index: 3; box-shadow: inset 0 -1px #ccc;">Target IP Addresses</th>
+                                        <th colspan="2" style="text-align: center; padding: 4px 6px; position: sticky; top: -4; background: white; z-index: 3; box-shadow: inset 0 -1px #ccc;">Target IP Addresses</th>
                                     </tr>
                                     <tr>
-                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 28px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Target IP</th>
-                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 28px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Count</th>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 24px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Target IP</th>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 24px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Count</th>
                                     </tr>
                                     </thead>
                                     <tbody>
