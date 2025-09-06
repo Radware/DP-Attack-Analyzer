@@ -1,7 +1,224 @@
 from common import *
 
+def timeline(waves: List[Dict[str, Any]], start_epoch: Optional[float] = None,  end_epoch: Optional[float] = None) -> str:
+    # Tuning
+    CONDENSE_THRESHOLD_FRAC = 0.12      # condense outer gap if ≥ 12% of window
+    CONDENSE_ABS_SECONDS    = 8 * 3600 # ...or if ≥ 8 hours
+    CONDENSE_WIDTH_PCT      = 8.0       # visual width (%) of each condensed edge
+    MIN_WAVE_HIT_WIDTH_PX   = 2         # min wave width (px) for hover targeting
 
-def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack_data, top_n_attack_ids, csv_data):
+    TRACK_GRAY = "#e5e7eb"
+    WAVE_RED   = "#ef4444"
+
+    def _to_naive_utc(d: datetime.datetime) -> datetime.datetime:
+        return d.astimezone(datetime.timezone.utc).replace(tzinfo=None) if d.tzinfo else d
+
+    def _esc(s: str) -> str:
+        return (s.replace("&", "&amp;")
+                 .replace('"', "&quot;")
+                 .replace("<", "&lt;")
+                 .replace(">", "&gt;"))
+
+    # Normalize waves -> naive UTC
+    usable = []
+    for w in (waves or []):
+        s, e = w.get("start"), w.get("end")
+        if not isinstance(s, datetime.datetime) or not isinstance(e, datetime.datetime):
+            continue
+        s = _to_naive_utc(s); e = _to_naive_utc(e)
+        if e < s: s, e = e, s
+        attack_count = len(w.get("attacks") or [])
+        usable.append((s, e, attack_count))
+
+    style = f"""
+<style>
+.attack-timeline{{position:relative; --tl-surface:#fff;}}
+.attack-timeline .track{{position:relative;height:20px;background:{TRACK_GRAY};border-radius:10px;overflow:visible}}
+.attack-timeline .seg{{position:absolute;height:100%}}
+
+/* tooltips */
+.attack-timeline .seg.wave::after{{
+  content:attr(data-l1) '\\A' attr(data-l2);
+  white-space:pre; position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%);
+  font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px; background:rgba(0,0,0,.75);
+  color:#fff; pointer-events:none; opacity:0; transition:opacity .12s;
+}}
+.attack-timeline .seg.gap::after,
+.attack-timeline .seg.compress::after{{
+  content:attr(data-l1);
+  white-space:pre; position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%);
+  font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px; background:rgba(0,0,0,.75);
+  color:#fff; pointer-events:none; opacity:0; transition:opacity .12s;
+}}
+.attack-timeline .seg:hover::after{{opacity:1}}
+
+/* waves */
+.attack-timeline .seg.wave{{
+  z-index:2; background:{WAVE_RED}; box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+  border:none; border-radius:0; min-width:{MIN_WAVE_HIT_WIDTH_PX}px;
+}}
+
+/* mid gaps: invisible, hover-only */
+.attack-timeline .seg.gap{{z-index:1; background:transparent; border:none; border-radius:0; min-width:2px;}}
+
+/* condensed edge (same gray as track) */
+.attack-timeline .seg.compress{{
+  z-index:1; background:{TRACK_GRAY}; border:0; border-radius:0; position:absolute;
+}}
+.attack-timeline .seg.compress.left-edge{{border-top-left-radius:10px; border-bottom-left-radius:10px;}}
+.attack-timeline .seg.compress.right-edge{{border-top-right-radius:10px; border-bottom-right-radius:10px;}}
+
+/* centered white PARALLELOGRAM (45° sides) + tight three dots */
+.attack-timeline .seg.compress .cutout{{
+  position:absolute; top:0px; bottom:0px; left:50%;
+  width:clamp(24px, 60%, 36px);
+  transform:translateX(-50%) skewX(-45deg); /* 45° parallelogram */
+  background:var(--tl-surface);
+  border-radius:3px;
+  /* box-shadow:0 0 0 1px rgba(0,0,0,0.06) inset, 0 1px 2px rgba(0,0,0,0.08); */
+  pointer-events:none;
+}}
+.attack-timeline .seg.compress .dots{{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-size:12px; line-height:1; color:#6b7280; letter-spacing:1px; pointer-events:none;
+  /* three bullets with no extra spaces between them */
+  content:"";
+}}
+/* use a pseudo-element for the dots' text to keep it tight across browsers */
+.attack-timeline .seg.compress .dots::before{{
+  content:"\\2022\\2022\\2022"; /* ••• */
+}}
+</style>
+""".strip()
+
+    if not usable:
+        return f'{style}<div class="attack-timeline"><div class="track"></div></div>'
+
+    # Overall window (epochs ms → naive UTC)
+    start_dt = (datetime.datetime.utcfromtimestamp(start_epoch / 1000.0).replace(tzinfo=None)
+                if (start_epoch not in (None, "")) else None)
+    end_dt   = (datetime.datetime.utcfromtimestamp(end_epoch / 1000.0).replace(tzinfo=None)
+                if (end_epoch   not in (None, "")) else None)
+    min_start = min(s for s, _, _ in usable)
+    max_end   = max(e for _, e, _ in usable)
+    overall_start = start_dt or min_start
+    overall_end   = end_dt   or max_end
+    if overall_end < overall_start:
+        overall_start, overall_end = overall_end, overall_start
+    total_seconds = max(1, int((overall_end - overall_start).total_seconds()))
+
+    # Clamp & sort
+    clamped = []
+    for s, e, cnt in usable:
+        ds, de = max(s, overall_start), min(e, overall_end)
+        if de <= overall_start or ds >= overall_end:
+            continue
+        clamped.append((ds, de, cnt))
+    clamped.sort(key=lambda x: x[0])
+
+    # No waves in window -> single full condensed
+    if not clamped:
+        l1 = _esc(f"No Attacks: {friendly_duration(overall_start, overall_end)} (condensed)")
+        seg = (
+            '<div class="seg compress left-edge right-edge" '
+            f'data-l1="{l1}" style="left:0.000000%;width:100.000000%;">'
+            '<div class="cutout"></div><div class="dots"></div>'
+            '</div>'
+        )
+        return f'{style}<div class="attack-timeline"><div class="track">{seg}</div></div>'
+
+    # Merge overlaps; sum attack counts
+    merged, counts = [], []
+    for s, e, cnt in clamped:
+        if not merged:
+            merged.append([s, e]); counts.append(cnt)
+        else:
+            ls, le = merged[-1]
+            if s <= le:
+                if e > le: merged[-1][1] = e
+                counts[-1] += cnt
+            else:
+                merged.append([s, e]); counts.append(cnt)
+
+    first_wave_start = merged[0][0]
+    last_wave_end    = merged[-1][1]
+    left_gap_sec  = max(0, int((first_wave_start - overall_start).total_seconds()))
+    right_gap_sec = max(0, int((overall_end - last_wave_end).total_seconds()))
+
+    def _should_condense(gap_sec: int) -> bool:
+        return (gap_sec >= CONDENSE_ABS_SECONDS) or ((gap_sec / total_seconds) >= CONDENSE_THRESHOLD_FRAC if total_seconds else False)
+
+    condense_left  = _should_condense(left_gap_sec)  and left_gap_sec  > 0
+    condense_right = _should_condense(right_gap_sec) and right_gap_sec > 0
+
+    left_pad_pct  = CONDENSE_WIDTH_PCT if condense_left  else (100.0 * left_gap_sec  / total_seconds)
+    right_pad_pct = CONDENSE_WIDTH_PCT if condense_right else (100.0 * right_gap_sec / total_seconds)
+    inner_pct     = max(1e-6, 100.0 - left_pad_pct - right_pad_pct)
+
+    inner_start = first_wave_start if condense_left  else overall_start
+    inner_end   = last_wave_end    if condense_right else overall_end
+    inner_secs  = max(1, int((inner_end - inner_start).total_seconds()))
+
+    def _map_left(t: datetime.datetime) -> float:
+        return left_pad_pct + ((t - inner_start).total_seconds() / inner_secs) * inner_pct
+
+    def _map_width(a: datetime.datetime, b: datetime.datetime) -> float:
+        return max(0.0, ((b - a).total_seconds() / inner_secs) * inner_pct)
+
+    parts = []
+
+    # Left condensed edge (with parallelogram + tight dots)
+    if condense_left and left_pad_pct > 0:
+        l1 = _esc(f"No Attacks: {friendly_duration(overall_start, first_wave_start)} (condensed)")
+        parts.append(
+            '<div class="seg compress left-edge" '
+            f'data-l1="{l1}" style="left:0.000000%;width:{left_pad_pct:.6f}%;">'
+            '<div class="cutout"></div><div class="dots"></div>'
+            '</div>'
+        )
+
+    # Middle gaps + waves
+    cursor = inner_start
+    for (ws, we), cnt in zip(merged, counts):
+        if ws > cursor:
+            gap_l = _map_left(cursor)
+            gap_w = _map_width(cursor, ws)
+            l1 = _esc(f"No Attacks: {friendly_duration(cursor, ws)}")
+            parts.append(
+                f'<div class="seg gap" data-l1="{l1}" '
+                f'style="left:{gap_l:.6f}%;width:{gap_w:.6f}%;"></div>'
+            )
+        wave_l = _map_left(ws)
+        wave_w = _map_width(ws, we)
+        l1 = _esc(f"Attack Wave Duration: {friendly_duration(ws, we)}")
+        l2 = _esc(f"{cnt} attack{'s' if cnt != 1 else ''}")
+        parts.append(
+            f'<div class="seg wave" data-l1="{l1}" data-l2="{l2}" '
+            f'style="left:{wave_l:.6f}%;width:{wave_w:.6f}%;"></div>'
+        )
+        cursor = we
+
+    # Right condensed edge (with parallelogram + tight dots) or regular trailing gap
+    if condense_right and right_pad_pct > 0:
+        l = 100.0 - right_pad_pct
+        l1 = _esc(f"No Attacks: {friendly_duration(last_wave_end, overall_end)} (condensed)")
+        parts.append(
+            f'<div class="seg compress right-edge" data-l1="{l1}" '
+            f'style="left:{l:.6f}%;width:{right_pad_pct:.6f}%;"><div class="cutout"></div><div class="dots"></div></div>'
+        )
+    else:
+        if last_wave_end < inner_end:
+            gap_l = _map_left(last_wave_end)
+            gap_w = _map_width(last_wave_end, inner_end)
+            l1 = _esc(f"No Attacks: {friendly_duration(last_wave_end, inner_end)}")
+            parts.append(
+                f'<div class="seg gap" data-l1="{l1}" '
+                f'style="left:{gap_l:.6f}%;width:{gap_w:.6f}%;"></div>'
+            )
+
+    return f'{style}<div class="attack-timeline"><div class="track">{"".join(parts)}</div></div>'
+
+def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack_data, top_n_attack_ids, csv_data, report_timeframe) -> str:
     """Takes raw data and outputs an english description of what occurred"""
     #Incident description
     #   Multiple attacks were detected on site _____
@@ -164,7 +381,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <!-- Attack timeframe -->
             <tr style="border: none;">
                 <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Timeframe:</strong></td>
-                <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{last_attack_end.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong></td>
+                <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime(output_time_format)}</strong> to <strong>{last_attack_end.strftime(output_time_format)}</strong></td>
             </tr>"""
 
         if len(waves) > 1:
@@ -175,10 +392,13 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             """
             
             for wave in waves:
-                output += f"""<br><strong>{wave['start'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{wave['end'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> - <strong>{len(wave['attacks'])} attacks</strong>"""
-            output += """
+                output += f"""<br><strong>{wave['start'].strftime(output_time_format)}</strong> to <strong>{wave['end'].strftime(output_time_format)}</strong> - <strong>{len(wave['attacks'])} attack{'s' if len(wave['attacks']) > 1 else ''}</strong> - <strong>Duration: {friendly_duration(wave['start'], wave['end'])}</strong>"""
+            output += f"""
+                    <!--  <br>The timeline below illustrates the timing of each attack wave relative to the overall attack timeframe. -->
+                    <br>{timeline(waves, report_timeframe['start_epoch'], report_timeframe['end_epoch'])}
                 </td>
             </tr>"""
+            
 
         output += f"""
 
@@ -201,8 +421,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 <tr style="border: none;">
                     <td style="border: none; text-align: right; vertical-align: top;"><strong>Peak Traffic Rate:</strong></td>
                     <td style="border: none; text-align: left;">
-                        <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
-                        <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
+                        <strong>Throughput</strong> peaked at <strong>{peak_traffic['bps']} kbps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime(output_time_format)}</strong><br>
+                        <strong>Packets per second (PPS)</strong> peaked at <strong>{peak_traffic['pps']} pps</strong> at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime(output_time_format)}</strong>
                     </td>
                 </tr>
                 """

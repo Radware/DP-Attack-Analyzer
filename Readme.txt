@@ -89,12 +89,17 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
-	v1.1.2 - 25 August 2025(Steve)
+	v1.1.3 - 5 September 2025 (Steve)
+		Bugfixes
+		Output date format is now user customizable through config.ini. Default is '%d-%b-%Y %H:%M:%S %Z' which looks like 11-Oct-2024 14:30:00 UTC
+		Adjusted BDOS lifecycle output
+		Added an Attack Waves Timeline
+	v1.1.2 - 25 August 2025 (Steve)
 		Bugfixes
 	v1.1.1 - 13 August 2025 (Steve)
 		Additional manual mode improvements
 		Moved PPS and BPS data tables into a loop that executes twice.
-		Moved get_top_n from html_data.py to data_parser.py
+		Moved get_top_n from html_data.py to data_parser.py.
 		Small one-time-use data_parser.py helper functions moved into their host function.
 		Data table Header row is now 'sticky'
 		Data in the 'Max Attack Rate' column will have data labels instead of all being unlabeled 'Gbps'

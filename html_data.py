@@ -103,14 +103,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     #loop through each attack and add a row to the table.
         for syslog_id, details in dataset:
-            bdos_lifecycle_log_id = syslog_id
-            final_fp = details.get('Final Footprint', 'N/A')
-            metrics_summary = details.get('metrics_summary', 'N/A')
-            metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
-            state_6_footprints = details.get('state_6_footprints', 'N/A')
-            formatted_state_6_footprints = "<br>".join(state_6_footprints.split('\n'))
-            formatted_metrics_summary = "<br>".join(metrics_summary.split('\n'))
-
+            
             row_class = ''
 
             graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
@@ -134,11 +127,16 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                     </div>"""
             
             # Main row
-            
+            start_time = details.get('Start Time', 'N/A')
+            end_time = details.get('End Time', 'N/A')
+            if start_time != 'N/A':
+                start_time = datetime.datetime.strptime(start_time, "%d-%m-%Y %H:%M:%S").strftime(output_time_format)
+            if end_time != 'N/A':
+                end_time = datetime.datetime.strptime(end_time, "%d-%m-%Y %H:%M:%S").strftime(output_time_format)
             html_content += f"""
                 <tr class="{row_class}">
-                    <td>{details.get('Start Time', 'N/A')}</td>
-                    <td>{details.get('End Time', 'N/A')}</td>
+                    <td>{start_time}</td>
+                    <td>{end_time}</td>
                     <td>{details.get('Attack ID', 'N/A')}</td>
                     <!-- <td>{syslog_id}</td> -->
                     <td>{details.get('Device IP', 'N/A')}<br>{details.get('Device Name', 'N/A')}</td>
@@ -161,23 +159,26 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 </tr>
             """
             # Collapsible row for bdos lifecycle (initially hidden)
+            formatted_state_6_footprints = """</td></tr>\n<tr><td style="word-break:break-word; overflow-wrap:anywhere;">""".join(details.get('state_6_footprints', 'N/A').splitlines())
+            state_6_footprints_table = f"""
+                        <table style="width:auto; margin:6px auto;">
+                            <tr><th>State 6 Footprints {syslog_id}</th></tr>
+                            <tr><td style="word-break:break-word; overflow-wrap:anywhere;">{formatted_state_6_footprints}</td></tr>
+                        </table>"""
             html_content += f"""
                 <tr id="bdos_lifecycle_{dataset_name}_{syslog_id}" style="display:none;">
-                    <td colspan="17">
-                        <table>
-                            <tr>
-                                <th>BDOS Metric Summary {syslog_id}</th>
-                            </tr>
-                            <tr>
-                                <td>{formatted_metrics_summary if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
-                            </tr>
-                            <tr>
-                                <th>State 6 Footprints {syslog_id}</th>
-                            </tr>                    
-                            <tr>
-                                <td>{formatted_state_6_footprints if metrics_summary != 'N/A' else 'No Footprints available'}</td>
+                    <td colspan="14">
+                        <table style="width:auto; margin:0 auto;">
+                            <tr><th colspan="2">BDOS Metric Summary {syslog_id}</th></tr>
+                            <tr><td style="white-space:nowrap;">BDOS Lifecycle Log ID</td><td> {syslog_id}</td></tr>
+                            <tr><td>Summary</td><td>{details.get('metrics_summary', 'N/A')}</td></tr>
+                            <tr><td>Final Attack Footprint</td>
+                                <td style="word-break:break-word; overflow-wrap:anywhere;">
+                                    {details.get('Final Footprint', 'N/A')}
+                                </td>
                             </tr>
                         </table>
+                        {state_6_footprints_table if details.get('state_6_footprints', 'N/A') != 'N/A' else ''}
                     </td>
                 </tr>
             """

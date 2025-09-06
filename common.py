@@ -6,7 +6,7 @@ import os
 import io
 import json
 import math
-from typing import Union
+from typing import Union, List, Dict, Any, Optional
 
 args = sys.argv.copy()
 script_filename = args.pop(0)
@@ -49,7 +49,7 @@ def update_log(message, newline=True, toconsole=True):
             
     with(open(log_file,"w" if log_state == 1 else "a")) as file:
         
-        log_entry = f"[{datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}] {clean_message}{end_char}"
+        log_entry = f"[{datetime.datetime.now().strftime('%d-%b-%Y %H:%M:%S')}] {clean_message}{end_char}"
         log_cache += log_entry
         if log_state == 1:
             file.write(log_cache)
@@ -122,6 +122,8 @@ class clsConfig():
             self.set('General','minimum_minutes_between_waves','5')
         if not self.config.has_option('General', 'ExcludeFilters'):
             self.set('General','ExcludeFilters','Memcached-Server-Reflect')
+        if not self.config.has_option('General', 'OutputTimeFormat'):
+            self.set('General','OutputTimeFormat','%%d-%%b-%%Y %%H:%%M:%%S %%Z') #Default '%d-%b-%Y %H:%M:%S %Z' looks like 11-Oct-2024 14:30:00 UTC
         #Reputation settings
         if not self.config.has_option('Reputation', 'use_abuseipdb'):
             self.set('Reputation','use_abuseipdb','False')
@@ -202,6 +204,7 @@ class clsConfig():
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
 reputation_included_columns = config.get("Reputation","included_columns","AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP").split(",")
+output_time_format = config.get("General","OutputTimeFormat","%d-%m-%Y %H:%M:%S %Z")
 
 class color:
     RESET = "\033[0m"
@@ -274,3 +277,24 @@ def friendly_bits(bits: int | float | str, precision: int = 3, base: float = 100
         unit_name += "s"
 
     return f"{sign}{number_string} {unit_name}"
+
+def friendly_duration(start: datetime, end: datetime) -> str:
+    """Return a human-friendly duration string between two datetimes."""
+    delta = abs(end - start)  # allow either order
+    seconds = int(delta.total_seconds())
+
+    days, remainder = divmod(seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, secs = divmod(remainder, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if secs or not parts:  # show seconds if nonzero, or if everything else is zero
+        parts.append(f"{secs} second{'s' if secs != 1 else ''}")
+
+    return " ".join(parts)

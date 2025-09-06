@@ -283,7 +283,7 @@ def parse_response_file():
             # Append data to the table
             table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_Gbps, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
             syslog_ids.append(syslog_id)
-
+    
     table_data.sort(key=lambda x: float(x[19]) if x[19] != 'N/A' else 0, reverse=True)
 
     syslog_details = {
@@ -302,7 +302,6 @@ def parse_response_file():
         "Max_Attack_Rate_PPS": row[20],
         # Formatted value for display
         "Max_Attack_Rate_PPS_formatted": "{:,}".format(int(row[20])) if row[20].isdigit() else 'N/A',
-
         "Final Footprint": row[16],
         "Start Time": row[23],
         "End Time": row[24]
@@ -359,7 +358,7 @@ def parse_csv(csvfile):
         update_log(f"    Processing CSV ({row_count} rows)")
         json_output_file = temp_folder + "response.json"
         dp_list_ip = {}
-        # Mapping of JSON output field → input CSV header (or None for generated/default fields)
+        # Mapping of "JSON output field": "input CSV header" (or None for generated/default fields)
         json_field_map = {
             "deviceIp": "Device IP Address",
             "sourcePort": "Source Port",
@@ -383,7 +382,7 @@ def parse_csv(csvfile):
             "averageAttackRateBps": None,  # Calculated from Total Mbits / Duration
             "activationId": "Activation Id",
             "packetType": "Packet Type",
-            "maxAttackRateBps": "Max Attack Rate in Kb",
+            "maxAttackRateBps": None, #"Max Attack Rate in Kb" or "Max bps" depending on the CSV version
             "mplsRd": None,
             "attackIpsId": "Attack ID",
             "sourceAddress": "Source IP Address",
@@ -444,6 +443,10 @@ def parse_csv(csvfile):
                         value = "0"
                 elif field == "packetBandwidth":
                     value = int(float(row.get("Total Mbits", "0")) * 1000)
+                elif field == "maxAttackRateBps":
+                    value = row.get("Max Attack Rate in Kb", "N/A")
+                    if value == "N/A":
+                        value = row.get("Max bps", "N/A")
                 elif field in ("startTime", "endTime"):
                     datetime_str = row.get(csv_col, None)
                     if datetime_str:
@@ -472,6 +475,7 @@ def parse_csv(csvfile):
                         csv_data[csv_col + " Packets"][value] = int(csv_data[csv_col + " Packets"].get(value,0)) + max(int(row.get("Total Packets", 1)), 1)
                     else:
                         csv_data[csv_col][value] = int(csv_data[csv_col].get(value,0)) + 1
+                        
                 elif csv_col:
                     value = row.get(csv_col, "N/A")
 
@@ -533,7 +537,6 @@ def parse_csv(csvfile):
 
     top_rows = list(top_rows.values())  # Unique rows only
 
-    update_log(f"    {color.GREEN}Complete{color.RESET}")
     for row in top_rows:
         for key, value in row.items():
             if key in csv_data['topN'].keys():
@@ -545,6 +548,7 @@ def parse_csv(csvfile):
                 else:
                     csv_data['topN'][key][value] = int(csv_data['topN'][key].get(value,0)) + 1
 
+    update_log(f"    {color.GREEN}Complete{color.RESET}")
     return dp_list_ip, epoch_from_time, epoch_to_time, csv_data
 
 def parse_log_file(file, syslog_ids):

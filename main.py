@@ -330,14 +330,22 @@ if __name__ == '__main__':
             unavailables = ""
         execution_statistics=f"""\
 <strong>Top {topN} Attacks by BPS and PPS</strong>
-<strong>Start Time:</strong> {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
-<strong>End Time:</strong> {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')} {cc_details}
+<strong>Start Time:</strong> {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime(output_time_format)} 
+<strong>End Time:</strong> {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime(output_time_format)} {cc_details}
 {dp_details}{unavailables}
 <strong>Policies:</strong> {"All" if len(policies) == 0 else policies}"""
         #old: DPs: {', '.join(f"{dp_list_ip.get(attack[1].get(device, {}).get('name', 'N/A'), 'N/A')} ({device})" for device in device_ips)}
 
-        with open(temp_folder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
-            file.write(execution_statistics)
+        execution_json = {
+                            'header':execution_statistics,
+                            'report_timeframe':{
+                                'start_epoch':epoch_from_time,
+                                'end_epoch':epoch_to_time
+                                }
+                          }
+        with open(temp_folder + 'ExecutionDetails.json', 'w', encoding='utf-8') as file:
+            json.dump(execution_json, file, ensure_ascii=False, indent=4)
+            #file.write(execution_statistics)
         update_log("Data collection complete")
         ##############################End of Collect_Data section##############################
 
@@ -394,15 +402,23 @@ if __name__ == '__main__':
         #Open executionStatistics.txt and include the contained information in the header
         update_log("    Generating header")
         stats_for_header = ""
-        with open(temp_folder + 'ExecutionDetails.txt', "r") as file:
-            for line in file:
-                stats_for_header += f"<p>{line.strip()}</p>\n"
+        execution_details = {}
+        
+        if os.path.isfile(temp_folder + 'ExecutionDetails.json'):
+            with open(temp_folder + 'ExecutionDetails.json', "r") as file:
+                execution_details = json.load(file)
+                for line in execution_details['header'].splitlines():
+                    stats_for_header += f"<p>{line.strip()}</p>\n"
+        else:
+            with open(temp_folder + 'ExecutionDetails.txt', "r") as file:
+                for line in file:
+                    stats_for_header += f"<p>{line.strip()}</p>\n"
 
         final_HTML = html_header.getHeader(stats_for_header) + html_graphs.graphPrerequisites()
 
         update_log("    Generating attack summary")
         html_summary = '\n<h2 style="text-align: center;">Attack Summary</h2>'
-        html_summary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids, csv_attack_data) 
+        html_summary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids, csv_attack_data, execution_details['report_timeframe']) 
         final_HTML += html_summary
 
         #Create the two graphs at the top of the HTML file
@@ -459,7 +475,7 @@ if __name__ == '__main__':
 
         update_log("    Saving output html file.")
         html_file_path = os.path.join(temp_folder, 'DP-Attack-Analyzer_Report.html')
-        with open(html_file_path, 'w') as file:
+        with open(html_file_path, 'w', encoding="utf-8") as file:
             file.write(final_HTML)
         update_log(f"    Success! The file has been saved to: {html_file_path}")
         

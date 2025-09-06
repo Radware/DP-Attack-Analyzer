@@ -9,14 +9,6 @@ from common import *
 
 
 #################### Helper functions ####################
-# def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
-#     # Parse the human-readable time to a datetime object
-#     dt = datetime.strptime(human_readable_time, time_format)
-#     # Convert the datetime object to epoch time
-#     epoch_time = int(time.mktime(dt.timetuple()) * 1000)
-#     return epoch_time, dt.month
-
-
 def prompt_user_time_period():
     """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
     previousFromTime = config.get('PreviousRun','epoch_from_time')
@@ -31,10 +23,10 @@ def prompt_user_time_period():
         print("4) Manually enter attack timeframe (Assumes your PC's local time zone unless UTC is specified)")
         print("5) Manually enter timeframe in epoch time")
         if previousFromTime and previousToTime:
-            longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
-            longToTime = datetime.datetime.fromtimestamp(int(previousToTime)/1000).astimezone().strftime('%d-%m-%Y %H:%M:%S %Z')
-            longFromTimeUTC = datetime.datetime.fromtimestamp(int(previousFromTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
-            longToTimeUTC = datetime.datetime.fromtimestamp(int(previousToTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')
+            longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime(output_time_format)
+            longToTime = datetime.datetime.fromtimestamp(int(previousToTime)/1000).astimezone().strftime(output_time_format)
+            longFromTimeUTC = datetime.datetime.fromtimestamp(int(previousFromTime)/1000, tz=datetime.timezone.utc).strftime(output_time_format)
+            longToTimeUTC = datetime.datetime.fromtimestamp(int(previousToTime)/1000, tz=datetime.timezone.utc).strftime(output_time_format)
             print(f"6) Time range from previous run - {longFromTime} to {longToTime} ({longFromTimeUTC} to {longToTimeUTC})")
         else:
             print("6) Time range from previous run (previous run not available)")
@@ -83,7 +75,7 @@ def prompt_user_time_period():
 
                 # Try multiple accepted formats
                 dt = None
-                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                for fmt in (output_time_format, '%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
                     try:
                         dt = datetime.datetime.strptime(from_time, fmt)
                         break
@@ -118,7 +110,7 @@ def prompt_user_time_period():
 
                 # Try multiple accepted formats
                 dt = None
-                for fmt in ('%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
+                for fmt in (output_time_format, '%d-%m-%Y %H:%M:%S', '%d %B %Y %H:%M:%S', '%d %b %y %H:%M:%S', '%d-%m-%y %H:%M:%S'):
                     try:
                         dt = datetime.datetime.strptime(to_time, fmt)
                         break
