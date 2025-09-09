@@ -298,3 +298,17 @@ def friendly_duration(start: datetime, end: datetime) -> str:
         parts.append(f"{secs} second{'s' if secs != 1 else ''}")
 
     return " ".join(parts)
+
+
+def get_readme_version(path="Readme.txt"):
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            text = f.read()
+
+        # Regex: find "# Version control" followed by newline, then capture the next line
+        match = re.search(r"# Version Control\s*\n([^\n^(]+)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return ""
+    except:
+        return ""

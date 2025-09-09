@@ -395,10 +395,10 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 output += f"""<br><strong>{wave['start'].strftime(output_time_format)}</strong> to <strong>{wave['end'].strftime(output_time_format)}</strong> - <strong>{len(wave['attacks'])} attack{'s' if len(wave['attacks']) > 1 else ''}</strong> - <strong>Duration: {friendly_duration(wave['start'], wave['end'])}</strong>"""
             output += f"""
                     <!--  <br>The timeline below illustrates the timing of each attack wave relative to the overall attack timeframe. -->
-                    <br>{timeline(waves, report_timeframe['start_epoch'], report_timeframe['end_epoch'])}
+                    <br>{timeline(waves, report_timeframe.get('start_epoch',None ), report_timeframe.get('end_epoch',None ))}
                 </td>
             </tr>"""
-            
+
 
         output += f"""
 

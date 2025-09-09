@@ -89,6 +89,9 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.4 - 9 September 2025 (Steve)
+		Bugfix for offline mode backwards compatability
+		Added script version to output log
 	v1.1.3 - 5 September 2025 (Steve)
 		Bugfixes
 		Output date format is now user customizable through config.ini. Default is '%d-%b-%Y %H:%M:%S %Z' which looks like 11-Oct-2024 14:30:00 UTC

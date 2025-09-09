@@ -28,6 +28,9 @@ from common import *
 collect_data=True
 parse_data=True
 csv_attack_data = {}
+
+update_log(f"Script version: {get_readme_version()}")
+exit(0)  # Temporary exit to prevent execution during testing
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
         update_log("Creating/clearing temp folder")
@@ -418,7 +421,7 @@ if __name__ == '__main__':
 
         update_log("    Generating attack summary")
         html_summary = '\n<h2 style="text-align: center;">Attack Summary</h2>'
-        html_summary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids, csv_attack_data, execution_details['report_timeframe']) 
+        html_summary += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids, csv_attack_data, execution_details.get('report_timeframe', {})) 
         final_HTML += html_summary
 
         #Create the two graphs at the top of the HTML file
