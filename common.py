@@ -26,8 +26,12 @@ if not os.path.exists(temp_folder):
 log_cache = ""
 log_state = 0
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-def update_log(message, newline=True, toconsole=True):
+def update_log(message, newline=True, toconsole=True, writecache=False):
     global log_cache, log_state
+    
+    if writecache:
+        log_state = 1
+
     end_char = '\n' if newline else ''
 
     def supports_color():

@@ -29,6 +29,7 @@ csv_attack_data = {}
 
 update_log(f"Script version: {get_readme_version()}")
 update_log(f"Git branch: {get_current_branch()}")
+update_log(f"Python version: {sys.version}")
 
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
@@ -45,11 +46,12 @@ if __name__ == '__main__':
                 except Exception as e:
                     update_log(f"  Failed to delete {file_path}. Reason: {e}")
             log_state = 1
-            update_log("Temp folder cleared")
+            update_log("Temp folder cleared", writecache=True)
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
             log_state = 1
+            update_log("Temp folder created", writecache=True)
         device_name = "name_not_found"
         if args and (args[0].lower() == '--manually-collected' or args[0] == '-m'):
             update_log("Running in 'Manually Collected Files' mode")
