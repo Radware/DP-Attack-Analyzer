@@ -7,7 +7,6 @@ import html
 from collections import defaultdict
 
 
-
 #internal modules
 import clsVision
 import collector
@@ -19,7 +18,6 @@ import html_header
 import html_ip_reputation
 import sftp_module
 import send_email
-
 
 
 #Default options such as topN and output folder are now stored in common.py. 
@@ -47,6 +45,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     update_log(f"  Failed to delete {file_path}. Reason: {e}")
             log_state = 1
+            update_log("Temp folder cleared")
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
