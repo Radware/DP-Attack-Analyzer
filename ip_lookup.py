@@ -80,14 +80,14 @@ def get_ip_abuse_data(ip, suppressErrors = False):
                         cached['IPQualityScore']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
                         write_updates = True
                     else:
-                        update_log(f"    Error updating ipqualityscore.com data for {ip}. Error: {ip_quality_score_response}")
+                        update_log(f"\n    Error updating ipqualityscore.com data for {ip}. Error: {ip_quality_score_response}")
                         cached['IPQualityScore']['cachedAt'] = 0
                         if ip_quality_score_response.get('message',"").startswith("You have exceeded"):
                             IPQualityScore_limit_reached = True
                 except Exception as e:
                     cached['IPQualityScore'] = {'fraud_score':'Error'}
                     cached['IPQualityScore']['cachedAt'] = 0
-                    update_log(f"    Error retreiving IPQualityScore info for {ip}. Type: {type(e).__name__}, Error: {e}")
+                    update_log(f"\n    Error retreiving IPQualityScore info for {ip}. Type: {type(e).__name__}, Error: {e}")
             else:
                 if cached.get('IPQualityScore',{}).get('cachedAt',0) > 0:
                     update_log(f"    Ipqualityscore.com limit reached. Stale cached data will be used for {ip}.", toconsole=suppressErrors)
@@ -137,7 +137,7 @@ def abuse_ip_db_call(ipAddress):
             'http': config.get('Reputation', 'http_proxy_address', 'http://your_proxy_url'),
             'https': config.get('Reputation', 'https_proxy_address', 'https://your_proxy_url')
         }
-        update_log(f"    Querying api.abuseipdb.com for {ipAddress}")
+        update_log(f"  Querying api.abuseipdb.com for {ipAddress}", newline=False)
         try:
             if enable_proxy:
                 # 5 seconds for connect timeout, 15 seconds for read timeout
@@ -146,7 +146,7 @@ def abuse_ip_db_call(ipAddress):
                 response = requests.request(method='GET', url=url, headers=headers, params=querystring, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"AbuseIPDB responded with status {response.status_code}: {response.text}")
-            update_log(f"      Response object: {response}")
+            update_log(f"      {response}")
         except Exception as e:
             update_log(f"  Exception occurred during AbuseIPDB request: {e}")
             update_log(f"     url: {url}")
@@ -177,7 +177,7 @@ def ip_quality_score_call(ip):
         url = f'https://ipqualityscore.com/api/json/ip/{key}/{ip}'
 
         # Send the API request
-        update_log(f"  Querying ipqualityscore.com for {ip}:")
+        update_log(f"  Querying ipqualityscore.com for {ip}:", newline=False)
         # 5 seconds for connect timeout, 15 seconds for read timeout
         try:
             if enable_proxy:
