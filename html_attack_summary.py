@@ -384,7 +384,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime(output_time_format)}</strong> to <strong>{last_attack_end.strftime(output_time_format)}</strong></td>
             </tr>"""
 
-        if len(waves) > 1:
+        if len(waves) >= 1:
             output += f"""
             <tr style="border: none;">
                 <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Waves:</strong></td>

@@ -45,13 +45,11 @@ if __name__ == '__main__':
                         os.unlink(file_path)
                 except Exception as e:
                     update_log(f"  Failed to delete {file_path}. Reason: {e}")
-            log_state = 1
-            update_log("Temp folder cleared", writecache=True)
+            update_log("Temp folder cleared", write_cache=True)
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
-            log_state = 1
-            update_log("Temp folder created", writecache=True)
+            update_log("Temp folder created", write_cache=True)
         device_name = "name_not_found"
         if args and (args[0].lower() == '--manually-collected' or args[0] == '-m'):
             update_log("Running in 'Manually Collected Files' mode")

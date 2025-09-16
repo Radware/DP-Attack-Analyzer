@@ -26,10 +26,10 @@ if not os.path.exists(temp_folder):
 log_cache = ""
 log_state = 0
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-def update_log(message, newline=True, toconsole=True, writecache=False):
+def update_log(message, newline=True, toconsole=True, write_cache=False):
     global log_cache, log_state
     
-    if writecache:
+    if write_cache:
         log_state = 1
 
     end_char = '\n' if newline else ''
