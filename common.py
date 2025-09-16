@@ -6,6 +6,7 @@ import os
 import io
 import json
 import math
+import subprocess
 from typing import Union, List, Dict, Any, Optional
 
 args = sys.argv.copy()
@@ -312,3 +313,12 @@ def get_readme_version(path="Readme.txt"):
         return ""
     except:
         return ""
+    
+
+
+def get_current_branch():
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"],stderr=subprocess.DEVNULL).decode().strip()
+        return branch
+    except Exception as e:
+        return f"Error: {e}"

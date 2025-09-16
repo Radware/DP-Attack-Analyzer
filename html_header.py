@@ -1,6 +1,9 @@
+from common import *
+
 def getHeader(stats):
     """Returns a header for the final output HTML file. The stats variable defines the content to the right of the "DP ATTACK Analyzer" logo"""
     header=f"""\
+<!-- DP-Attack-Analyzer Build:{get_readme_version()} Branch:{get_current_branch()}-->
 <html>
   <head>
     <link rel="icon" type="image/x-icon" href={favicon()}>
@@ -25,6 +28,7 @@ def getHeader(stats):
     return header
 
 def getCSS():
+
     """Returns CSS to be included in the header."""
 
     return """<style>

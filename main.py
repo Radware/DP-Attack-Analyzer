@@ -30,7 +30,8 @@ parse_data=True
 csv_attack_data = {}
 
 update_log(f"Script version: {get_readme_version()}")
-exit(0)  # Temporary exit to prevent execution during testing
+update_log(f"Git branch: {get_current_branch()}")
+
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
         update_log("Creating/clearing temp folder")

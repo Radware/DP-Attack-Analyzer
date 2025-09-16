@@ -89,6 +89,9 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.5 - 16 September 2025 (Steve)
+		Bugfix
+		Added git branch to output log
 	v1.1.4 - 9 September 2025 (Steve)
 		Bugfix for offline mode backwards compatability
 		Added script version to output log
