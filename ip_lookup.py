@@ -80,7 +80,7 @@ def get_ip_abuse_data(ip, suppressErrors = False):
                         cached['IPQualityScore']['cachedAt'] = datetime.datetime.now(datetime.timezone.utc).timestamp()
                         write_updates = True
                     else:
-                        update_log(f"\n    Error updating ipqualityscore.com data for {ip}. Error: {ip_quality_score_response}")
+                        update_log(f"    Error: {ip_quality_score_response}")
                         cached['IPQualityScore']['cachedAt'] = 0
                         if ip_quality_score_response.get('message',"").startswith("You have exceeded"):
                             IPQualityScore_limit_reached = True
@@ -191,7 +191,7 @@ def ip_quality_score_call(ip):
                 response = requests.request(method='GET', url=url, verify=False, timeout=(5, 15))
             if response.status_code != 200:
                 raise requests.HTTPError(f"ipqualityscore.com responded with status {response.status_code}: {response.text}")
-            update_log(f"    Response object: {response}")
+            update_log(f"    {response}")
         except Exception as e:
             update_log(f"Exception occurred during ipqualityscore.com request: {e}")
             update_log(f"     url: {url}")

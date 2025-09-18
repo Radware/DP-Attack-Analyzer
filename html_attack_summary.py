@@ -146,7 +146,10 @@ def timeline(waves: List[Dict[str, Any]], start_epoch: Optional[float] = None,  
     right_gap_sec = max(0, int((overall_end - last_wave_end).total_seconds()))
 
     def _should_condense(gap_sec: int) -> bool:
-        return (gap_sec >= CONDENSE_ABS_SECONDS) or ((gap_sec / total_seconds) >= CONDENSE_THRESHOLD_FRAC if total_seconds else False)
+        if len(waves) <= 1:
+            return False # never condense if only one wave
+        else:
+            return (gap_sec >= CONDENSE_ABS_SECONDS) or ((gap_sec / total_seconds) >= CONDENSE_THRESHOLD_FRAC if total_seconds else False)
 
     condense_left  = _should_condense(left_gap_sec)  and left_gap_sec  > 0
     condense_right = _should_condense(right_gap_sec) and right_gap_sec > 0
@@ -387,14 +390,15 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         if len(waves) >= 1:
             output += f"""
             <tr style="border: none;">
-                <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Waves:</strong></td>
-                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack waves</strong> separated by at least <strong>{minimum_minutes_between_waves} minutes</strong>.
+                <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Wave{'s' if len(waves) > 1 else ''}:</strong></td>
+                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack wave{'s' if len(waves) > 1 else ''}</strong> {'with at least <strong>{minimum_minutes_between_waves} minutes</strong> between waves.' if len(waves) > 1 else ''}
             """
             
             for wave in waves:
                 output += f"""<br><strong>{wave['start'].strftime(output_time_format)}</strong> to <strong>{wave['end'].strftime(output_time_format)}</strong> - <strong>{len(wave['attacks'])} attack{'s' if len(wave['attacks']) > 1 else ''}</strong> - <strong>Duration: {friendly_duration(wave['start'], wave['end'])}</strong>"""
             output += f"""
-                    <!--  <br>The timeline below illustrates the timing of each attack wave relative to the overall attack timeframe. -->
+                    <br>
+                    <br>The timeline below illustrates the timing of each attack wave relative to the overall attack timeframe.
                     <br>{timeline(waves, report_timeframe.get('start_epoch',None ), report_timeframe.get('end_epoch',None ))}
                 </td>
             </tr>"""

@@ -92,6 +92,7 @@
 	v1.1.5 - 16 September 2025 (Steve)
 		Bugfix
 		Added git branch to output log
+		Waves will be displayed provided there is at least one wave.
 	v1.1.4 - 9 September 2025 (Steve)
 		Bugfix for offline mode backwards compatability
 		Added script version to output log
