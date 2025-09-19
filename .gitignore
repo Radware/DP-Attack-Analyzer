@@ -8,6 +8,7 @@ run.sh
 Temp/
 Reports/
 reputation_cache.json
+Manual/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
