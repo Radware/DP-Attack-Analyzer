@@ -102,7 +102,7 @@ def generate_html_table(ip_data, table_id="reputation_all"):
 def getIpReputationHTML(ip_sample_data):
     ip_data = {}
     for entry in ip_sample_data:
-        result = ip_lookup.get_ip_abuse_data(entry['sourceAddress'])
+        result = ip_lookup.get_ip_abuse_data(entry['sourceAddress'], suppressErrors=True)
         ip_data[entry['sourceAddress']] = result
 
     #html_content = f"""<button onclick="document.getElementById('reputation_all_popup').style.display = 'flex';document.getElementById('reputation_all_overlay').style.display = 'block';">

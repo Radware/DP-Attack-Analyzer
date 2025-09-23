@@ -3,25 +3,58 @@ import datetime
 import sys
 import re
 import os
+import io
+import json
+import math
+import subprocess
+from typing import Union, List, Dict, Any, Optional
 
 args = sys.argv.copy()
 script_filename = args.pop(0)
 script_start_time = datetime.datetime.now()
 common_globals = {'unavailable_devices':[]}
+common_globals['Manual Mode'] = False
 
 temp_folder = "./Temp/"
+manual_folder = "./manual/"
 log_file = temp_folder + "Attack-Analyzer.log"
 if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)
 
+
+
 log_cache = ""
 log_state = 0
-def update_log(message):
+ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+def update_log(message, newline=True, toconsole=True, write_cache=False):
     global log_cache, log_state
-    print(message)
+    
+    if write_cache:
+        log_state = 1
 
+    end_char = '\n' if newline else ''
+
+    def supports_color():
+        import sys, os
+        if not sys.stdout.isatty():
+            return False
+        if os.environ.get("TERM") == "dumb":
+            return False
+        if "NO_COLOR" in os.environ:
+            return False
+        return True
+
+    clean_message = ansi_escape.sub('', message)
+
+    if toconsole:
+        if supports_color():
+            print(message, end=end_char, flush=True)
+        else:
+            print(clean_message, end=end_char, flush=True)
+            
     with(open(log_file,"w" if log_state == 1 else "a")) as file:
-        log_entry = f"[{datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}] {message}\n"
+        
+        log_entry = f"[{datetime.datetime.now().strftime('%d-%b-%Y %H:%M:%S')}] {clean_message}{end_char}"
         log_cache += log_entry
         if log_state == 1:
             file.write(log_cache)
@@ -94,6 +127,8 @@ class clsConfig():
             self.set('General','minimum_minutes_between_waves','5')
         if not self.config.has_option('General', 'ExcludeFilters'):
             self.set('General','ExcludeFilters','Memcached-Server-Reflect')
+        if not self.config.has_option('General', 'OutputTimeFormat'):
+            self.set('General','OutputTimeFormat','%%d-%%b-%%Y %%H:%%M:%%S %%Z') #Default '%d-%b-%Y %H:%M:%S %Z' looks like 11-Oct-2024 14:30:00 UTC
         #Reputation settings
         if not self.config.has_option('Reputation', 'use_abuseipdb'):
             self.set('Reputation','use_abuseipdb','False')
@@ -174,3 +209,120 @@ class clsConfig():
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
 reputation_included_columns = config.get("Reputation","included_columns","AbuseIPDB_abuseConfidenceScore,AbuseIPDB_countryCode,AbuseIPDB_domain,AbuseIPDB_isp,IPQualityScore_fraud_score,IPQualityScore_country_code,IPQualityScore_host,IPQualityScore_ISP").split(",")
+output_time_format = config.get("General","OutputTimeFormat","%d-%m-%Y %H:%M:%S %Z")
+
+class color:
+    RESET = "\033[0m"
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+
+def friendly_bits(bits: int | float | str, precision: int = 3, base: float = 1000.0, is_rate: bool = False) -> str:
+    """
+    Ingests a large number and outputs the number in the largest SI unit:
+    Bits, Kb, Mb, Gb, Tb, Petabits, Exabits
+
+    :param bits: Number of bits (can be int or float).
+    :param precision: Optional: default 3. Max decimal places to show (without trailing zeros).
+    :param base: Optional: default 1000.0, You may prefer to use 1024.0.
+    :param is_rate: Optional: if true, returns a rate instead of a standalone value. Kbps instead of Kb
+    :return: e.g., "1.23 Gb", "987 Mb", "432 Bits"
+    """
+
+    if is_rate:
+        units = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps"]
+    else:
+        units = ["Bit", "Kb", "Mb", "Gb", "Tb", "Petabit", "Exabit"]
+    
+    original_str = str(bits)
+
+    if isinstance(bits, str):
+        s = bits.strip().replace(",", "").replace("_", "")
+    else:
+        s = bits
+
+    try:
+        num = float(s)
+    except (ValueError, TypeError):
+        return original_str
+        
+     # Validate value/base
+    if not math.isfinite(num):
+        return original_str
+    if base <= 1:
+        base = 1000.0  # sane fallback
+
+    # Handle sign and magnitude
+    sign = "-" if num < 0 else ""
+    value = abs(num)
+
+    # Scale to largest unit
+    unit_idx = 0
+    while value >= base and unit_idx < len(units) - 1:
+        value /= base
+        unit_idx += 1
+
+    # Format with commas, trim trailing zeros
+    number_string = f"{value:.{precision}f}".rstrip("0").rstrip(".")
+    if "." in number_string:
+        int_part, frac = number_string.split(".", 1)
+        int_part = f"{int(int_part):,}"
+        number_string = f"{int_part}.{frac}"
+    else:
+        number_string = f"{int(number_string):,}"
+    
+    # Add plural 's' if [bit, petabit, or exabit] and value >= 2
+    unit_name = units[unit_idx]
+    if unit_idx in (0,5,6) and (number_string != "1") and not is_rate:
+        unit_name += "s"
+
+    return f"{sign}{number_string} {unit_name}"
+
+def friendly_duration(start: datetime, end: datetime) -> str:
+    """Return a human-friendly duration string between two datetimes."""
+    delta = abs(end - start)  # allow either order
+    seconds = int(delta.total_seconds())
+
+    days, remainder = divmod(seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, secs = divmod(remainder, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if secs or not parts:  # show seconds if nonzero, or if everything else is zero
+        parts.append(f"{secs} second{'s' if secs != 1 else ''}")
+
+    return " ".join(parts)
+
+
+def get_readme_version(path="Readme.txt"):
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            text = f.read()
+
+        # Regex: find "# Version control" followed by newline, then capture the next line
+        match = re.search(r"# Version Control\s*\n([^\n^(]+)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return ""
+    except:
+        return ""
+    
+
+
+def get_current_branch():
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"],stderr=subprocess.DEVNULL).decode().strip()
+        return branch
+    except Exception as e:
+        return f"Error: {e}"

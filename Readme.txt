@@ -18,10 +18,11 @@
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
 
 # How to run
-	The script can be run in three modes:
+	The script can be run in four modes:
 		- Interactive (without command line arguments)
 		- Automated, using command line arguments and cached settings from previous runs
 		- Automated, using a json list for the arguments
+		- Manually Collected Files from Cyber Controller (Tech support and forensics)
 	
 	Optional:
 		Config.ini is automatically generated during the script's first execution. It contains multiple customizations that can improve the final product. These include:
@@ -43,8 +44,7 @@
 		1. Run the script with the -h argument for details.
 			python main.py -h
 
-		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
-			```text
+		At the time of updating this section of the readme (19 September 2025), the output of python main.py -h is:
 			Script syntax:
 			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
@@ -64,7 +64,6 @@
 				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
-		'''
 
 		JSON launcher:
 			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
@@ -81,9 +80,42 @@
 						"value" - Varieant based on type specified. If selected type requires multiple inputs, place them in a list [StartTime, Endtime]
 					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
 				See the included launcher.json.example for a sample.
-
+		
+		Manually Collected Files (Tech support and forensics):
+			1. Collect a techsupport file and a forensics report from one or more defensepro appliances.
+			2. Place the TechSupport .tgz and Forensics .zip files in the ./Manual/ folder
+			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.5 - 16 September 2025 (Steve)
+		Bugfix
+		Added git branch to output log
+		Waves will be displayed provided there is at least one wave.
+	v1.1.4 - 9 September 2025 (Steve)
+		Bugfix for offline mode backwards compatability
+		Added script version to output log
+	v1.1.3 - 5 September 2025 (Steve)
+		Bugfixes
+		Output date format is now user customizable through config.ini. Default is '%d-%b-%Y %H:%M:%S %Z' which looks like 11-Oct-2024 14:30:00 UTC
+		Adjusted BDOS lifecycle output
+		Added an Attack Waves Timeline
+	v1.1.2 - 25 August 2025 (Steve)
+		Bugfixes
+	v1.1.1 - 13 August 2025 (Steve)
+		Additional manual mode improvements
+		Moved PPS and BPS data tables into a loop that executes twice.
+		Moved get_top_n from html_data.py to data_parser.py.
+		Small one-time-use data_parser.py helper functions moved into their host function.
+		Data table Header row is now 'sticky'
+		Data in the 'Max Attack Rate' column will have data labels instead of all being unlabeled 'Gbps'
+		IPQualityScore limit reached messages will now only appear once per IP.
+		Fixed a bug where the first IP looked up after the limit was reached would have it's cache erased.
+	v1.1.0 - 9 July 2025 (Steve)
+		Added manual mode for running the script externally against previously (manually) collected support and bdos files.
+			Manual mode files should be placed in ./Manual/
+			Support files should be .tar.gz.
+			BDOS files should be .zip
+		Improved logging functionality
 	v1.0.0 – 08 July 2025 
 		Highlights:
 			Data collection from multiple points across CyberController and DefensePro
@@ -96,7 +128,7 @@
 			Comprehensive attack summary, wave grouping, and mini-graphs
 			Environment and device-aware configuration via launcher.json
 			Improved logging, error handling, and UI consistency
-	v0.22.1 - 25 June 2025(Steve)
+	v0.22.1 - 25 June 2025 (Steve)
 		Added fix for 'reputation country = None' condition.
 		Added an additonal launcher.json example.
 		Misc code cleanup.
@@ -365,4 +397,3 @@
 		Removed commented lines after reviewing with the team.
 	v0.4.0 - 25 June 2024 - Initial Dev Build (Steve)
 		Merged my clsVision module into Prateek's code.
-
