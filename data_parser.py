@@ -272,7 +272,7 @@ def parse_response_file():
             #     syslog_id = attackipsid_to_syslog_id_hex(attackid)
             
             # Determine syslog_id 
-            if config.get('General', 'HexBasedSyslogIDs','true').lower() == 'true':
+            if config.get('General', 'HexBasedSyslogIDs', True):
                 syslog_id = attackipsid_to_syslog_id_hex(attackid)
             else:
                 syslog_id = attackipsid_to_syslog_id(attackid)
