@@ -130,7 +130,7 @@ class clsConfig():
         if not self.config.has_option('General', 'OutputTimeFormat'):
             self.set('General','OutputTimeFormat','%%d-%%b-%%Y %%H:%%M:%%S %%Z') #Default '%d-%b-%Y %H:%M:%S %Z' looks like 11-Oct-2024 14:30:00 UTC
         if not self.config.has_option('General', 'HexBasedSyslogIDs'):
-            self.set('General','UsesHexBasedSyslogIDs','True')
+            self.set('General','Hex_Based_Syslog_Ids','True')
         #Reputation settings
         if not self.config.has_option('Reputation', 'use_abuseipdb'):
             self.set('Reputation','use_abuseipdb','False')

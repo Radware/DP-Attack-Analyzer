@@ -11,7 +11,7 @@ minimum_minutes_between_waves = 5
 excluded_attack_types = Memcache, PacketAnomalies, RFC
 excludefilters = DOSS-DNS-Ref-L4-Above-3000
 outputtimeformat = %%d-%%b-%%Y %%H:%%M:%%S %%Z
-useshexbasedsyslogids = True
+hex_based_syslog_ids = True
 
 [Email]
 send_email = FALSE
