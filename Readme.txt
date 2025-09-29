@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.6 - 29 September 2025 (Steve)
+		Uncompressed .csv files are now processed in manual mode if a user unzips them.
 	v1.1.5 - 16 September 2025 (Steve)
 		Bugfix
 		Added git branch to output log

@@ -52,7 +52,7 @@ def cache_and_identify_date_format(csv_text_stream, date_cols, default_fmt=MDY_F
                 return fmt
         return None
 
-    cached_path = os.path.join(temp_folder, csv_text_stream.name)
+    cached_path = os.path.join(temp_folder, csv_text_stream.name.rsplit('/', 1)[-1].rsplit('\\', 1)[-1])
 
     # Write stream to local temp file
     with open(cached_path, "w", encoding="utf-8", newline="") as tmp:
