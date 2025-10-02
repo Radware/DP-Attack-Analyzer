@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.7 - 29 September 2025 (Steve)
+		Removed pysftp dependencies. We now directly use paramiko instead.
 	v1.1.6 - 24 September 2025 (Steve)
 		Default to hex based AttackID to SyslogID conversion. 
 			Option to use decimal is available in config.ini 'useshexbasedsyslogids=false' (Only needed for DP version 8.32.x).
