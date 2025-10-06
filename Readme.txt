@@ -272,6 +272,7 @@
 		    The script will then compress temp folder. 
 			The compressed file will be saved to ./Output/<Year>-<Month>-<Day>_<Hour>.<Minute>.<Second>.tgz
 			The temp folder will then be deleted.
+			Compressing and deleting the temp folder can be disabled by setting 'Compress_Output = FALSE' in config.ini
 		Config.ini now includes a Top_N value. Changing this number will change how many attacks are included in reported data.
 		Added 2 pie charts comparing attack types by total bandwidth and packets.
 		Moved Graph legends to top of graphs to accomodate hAxis label.
