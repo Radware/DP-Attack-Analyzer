@@ -92,7 +92,7 @@
 	v1.1.6 - 24 September 2025 (Steve)
 		Default to hex based AttackID to SyslogID conversion. 
 			Option to use decimal is available in config.ini 'useshexbasedsyslogids=false' (Only needed for DP version 8.32.x).
-		Removed 'compress_output' ini option as it is outdated.
+		Removed 'compress_output' ini option
 	v1.1.5 - 16 September 2025 (Steve)
 		Bugfix
 		Added git branch to output log
@@ -272,7 +272,6 @@
 		    The script will then compress temp folder. 
 			The compressed file will be saved to ./Output/<Year>-<Month>-<Day>_<Hour>.<Minute>.<Second>.tgz
 			The temp folder will then be deleted.
-			Compressing and deleting the temp folder can be disabled by setting 'Compress_Output = FALSE' in config.ini
 		Config.ini now includes a Top_N value. Changing this number will change how many attacks are included in reported data.
 		Added 2 pie charts comparing attack types by total bandwidth and packets.
 		Moved Graph legends to top of graphs to accomodate hAxis label.
