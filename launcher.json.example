@@ -9,6 +9,7 @@
         "defensepros_policies": {
             "1.2.3.4": "Policies,policy2",
             "2.3.4.5": "Pol1,pol2",
+			"3.4.5.6": "--invert,exclude1,exclude2",
             "4.5.6.7": " "
         }
     },

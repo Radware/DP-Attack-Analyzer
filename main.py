@@ -184,6 +184,7 @@ if __name__ == '__main__':
                         except:
                             policy_names = "<unavailable>"
                         print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
+                        print(f"    input --invert or -i as the first policy name to treat the list as an exclusion list instead of an inclusion list.")
                         print(f"    Available policies: ")
                         print(f"        {policy_names}")
                         policy_input = input(f"Policies (leave blank for All Policies): ").strip()
