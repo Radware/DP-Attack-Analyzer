@@ -278,8 +278,9 @@ def get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_
                     for policy in device_policies[1:]
                 ]
             filter_json = {
-                "type": "andFilter" if inverseFilters else "orFilter",
-                "inverseFilter": inverseFilters,
+                #or filter for normal policies (term1 or term2 or term3), and filter for inverse policies (not term1 and not term2 and not term3)
+                "type": "andFilter" if inverseFilters else "orFilter", 
+                "inverseFilter": False,
                 "filters": filters
             } if filters else None
 
