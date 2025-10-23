@@ -52,7 +52,7 @@ def cache_and_identify_date_format(csv_text_stream, date_cols, default_fmt=MDY_F
                 return fmt
         return None
 
-    cached_path = os.path.join(temp_folder, csv_text_stream.name.rsplit('/', 1)[-1].rsplit('\\', 1)[-1])
+    cached_path = os.path.join(temp_folder, csv_text_stream.name)
 
     # Write stream to local temp file
     with open(cached_path, "w", encoding="utf-8", newline="") as tmp:
@@ -203,16 +203,6 @@ def parse_response_file():
         if ip_address == 'metaData':
             continue
         
-        # Get the active version for the device IP
-        # if ip_address not in device_version_cache:
-        #     active_version = v.getActiveVersion(ip_address)
-        #     device_version_cache[ip_address] = active_version
-        # else:
-        #     active_version = device_version_cache[ip_address]
-        # # Determine if the version is 8.32.x
-        # print(device_version_cache)
-        # is_version_8_32_x = active_version and active_version.startswith("8.32.")
-        
         for row_data in ip_data.get('data', []):
             row = row_data.get('row', {})
             
@@ -265,7 +255,15 @@ def parse_response_file():
                 return str(duration)
             
             duration = calculate_duration(start_time, end_time) if start_time != 'N/A' and end_time != 'N/A' else 'N/A'
-            
+            # # Get the active version for the device IP
+            # if ip_address not in device_version_cache:
+            #     active_version = v.getActiveVersion(ip_address)
+            #     device_version_cache[ip_address] = active_version
+            # else:
+            #     active_version = device_version_cache[ip_address]
+            # # Determine if the version is 8.32.x
+            # is_version_8_32_x = active_version and active_version.startswith("8.32.")
+
             # Determine syslog_id based on active version
             # if is_version_8_32_x:
             #     syslog_id = attackipsid_to_syslog_id(attackid)
@@ -274,7 +272,7 @@ def parse_response_file():
             #     syslog_id = attackipsid_to_syslog_id_hex(attackid)
             
             # Determine syslog_id 
-            if attackid.startswith("FFFFFFFF-FFFF-FFFF"):
+            if config.get('General', 'Hex_Based_Syslog_Ids', True):
                 syslog_id = attackipsid_to_syslog_id_hex(attackid)
             else:
                 syslog_id = attackipsid_to_syslog_id(attackid)
