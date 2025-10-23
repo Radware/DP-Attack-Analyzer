@@ -134,7 +134,7 @@ if __name__ == '__main__':
                             update_log(f'     \033[92mComplete\033[0m')
                             dp_list_temp, this_epoch_from_time, this_epoch_to_time, new_csv_attack_data = data_parser.parse_csv(csv_file)
                             dp_list_ip.update(dp_list_temp)
-                            
+
                             #Merge new_csv_attack_data into csv_attack_data
                             #new_csv_attack_data = {"Destination IP Address": {"1.2.3.4": "15", "Multiple": "25333", "5.6.7.8": "7"},"Other Thing": {"2.3.4.5": "22", "3.4.5.6": "100"}}
                             for key, values in new_csv_attack_data.items():

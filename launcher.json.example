@@ -7,7 +7,7 @@
             "value": 24
         },
         "defensepros_policies": {
-            "1.2.3.4": "Policy1,Policy2,etc",
+            "1.2.3.4": "Policies,Policy2,etc",
             "2.3.4.5": "Pol1,Pol2",
             "4.5.6.7": " "
         }
