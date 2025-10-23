@@ -58,10 +58,10 @@ if __name__ == '__main__':
                 found_files = []
                 dp_list_ip = {}
                 foundtgz = False
-                foundcsv = False
+                foundzip = False
                 for filename in os.listdir(manual_folder):
                     file_path = os.path.join(manual_folder, filename)
-                    if filename.lower().endswith(".tar.gz"):
+                    if filename.endswith(".tar.gz"):
                         update_log(f'Processing {file_path}')
                         #Do tar support file stuff
                         with tarfile.open(file_path,'r:gz') as outer_tgz:
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                                                     found_files.append(extracted_name)
                                                     update_log(f'     {color.GREEN}Complete{color.RESET} ({extracted_name})')
                                                     foundtgz = True
-                    elif filename.lower().endswith(".zip"):
+                    elif ".zip" in filename:
                         #BDOS csv file
                         update_log(f"Processing {file_path}")
                         with zipfile.ZipFile(file_path, 'r') as z:
@@ -123,41 +123,13 @@ if __name__ == '__main__':
                                             epoch_from_time = int(this_epoch_from_time)
                                         if 'epoch_to_time' not in locals() or this_epoch_to_time > epoch_to_time:
                                             epoch_to_time = int(this_epoch_to_time)
-                                        foundcsv = True
+                                        foundzip = True
                                         break
                             else:
                                 update_log(f"WARNING: CSV not found in {file_path}")
-                    elif filename.lower().endswith(".csv"):
-                        #Single CSV file (not in a zip)
-                        update_log(f"Opening {file_path}")
-                        with open(file_path, 'r', encoding='utf-8') as csv_file:
-                            update_log(f'     \033[92mComplete\033[0m')
-                            dp_list_temp, this_epoch_from_time, this_epoch_to_time, new_csv_attack_data = data_parser.parse_csv(csv_file)
-                            dp_list_ip.update(dp_list_temp)
-                            
-                            #Merge new_csv_attack_data into csv_attack_data
-                            #new_csv_attack_data = {"Destination IP Address": {"1.2.3.4": "15", "Multiple": "25333", "5.6.7.8": "7"},"Other Thing": {"2.3.4.5": "22", "3.4.5.6": "100"}}
-                            for key, values in new_csv_attack_data.items():
-                                if key != 'topN':
-                                    inner = csv_attack_data.setdefault(key, {})
-                                    for index, innerval in values.items():
-                                        inner[index] = int(inner.get(index, 0)) + int(innerval)
-                                else:
-                                    #Key = topN
-                                    topN_dest = csv_attack_data.setdefault('topN', {})
-                                    for topN_key, topN_values in values.items():
-                                        inner = topN_dest.setdefault(topN_key, {})
-                                        for index, innerval in topN_values.items():
-                                            inner[index] = int(inner.get(index, 0)) + int(innerval)
-
-                            if 'epoch_from_time' not in locals() or this_epoch_from_time < epoch_from_time:
-                                epoch_from_time = int(this_epoch_from_time)
-                            if 'epoch_to_time' not in locals() or this_epoch_to_time > epoch_to_time:
-                                epoch_to_time = int(this_epoch_to_time)
-                            foundcsv = True
                     else:
                         update_log(f"Notice: file {filename} in {manual_folder} does not end in .zip or .tar.gz and will be ignored")
-                if not foundcsv:
+                if not foundzip:
                     update_log(f"{color.YELLOW}Warning:{color.RESET} Forensics with attack details file not found.")
                     update_log("  Including forensics with attack details .zip files in the ./Manual/ folder will enhance the report.")
                 if not foundtgz:
