@@ -284,7 +284,7 @@ if __name__ == '__main__':
             if len(device_ips) > 0:
                 for ip in device_ips:
                     p = policies.get(ip, [])
-                    if p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
+                    if policies and p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
                         all_policies = v.getDPPolicies(ip)['rsIDSNewRulesTable']
                         inverse_policies = [policy['rsIDSNewRulesName'] for policy in all_policies if policy['rsIDSNewRulesName'] not in p[1:]]
                         selected_devices.append({'deviceId': ip, 'networkPolicies': inverse_policies, 'ports': []})
