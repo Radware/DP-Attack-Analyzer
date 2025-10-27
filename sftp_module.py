@@ -1,72 +1,6 @@
-# import re
-# import warnings
-# import configparser
-# from getpass import getpass  # For secure password input
-# from common import *
-
-# try:
-#     import pysftp
-# except ImportError:
-#     update_log("The python module 'pysftp' is not installed. Please install it by running: pip install pysftp")
-#     exit()
-
-# warnings.filterwarnings(action='ignore', module='pysftp', category=UserWarning)
-
-# def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
-#     cnopts = pysftp.CnOpts()
-#     cnopts.hostkeys = None  # Disable host key checking
-
-#     # Define the remote and local paths
-#     remote_path = '/disk/var/attacklog/bdos'
-#     #local_path = './Output/'
-
-#     #year = 2024 
-
-#     if to_month:
-#         pattern = re.compile(f"BDOS{start_year}[{from_month}-{to_month}]")
-#     else:
-#         pattern = re.compile(f"BDOS{start_year}{from_month}")
-    
-#     all_found_files = []
-
-#     # Connect to the SFTP server and perform operations
-#     for device_ip in device_ips:
-#         try:
-#             device_ip = device_ip.strip()
-#             dpData = v.getDeviceData(device_ip)
-#             username = dpData['deviceSetup']['deviceAccess']['httpsUsername']
-#             password = dpData['deviceSetup']['deviceAccess']['httpsPassword']
-#             port = dpData['deviceSetup']['deviceAccess']['cliPort']
-#             with pysftp.Connection(device_ip, username=username, password=password, port=port, cnopts=cnopts) as sftp:
-#                 update_log(f"Connected to {device_ip} ... ")
-
-#                 files = sftp.listdir(remote_path)
-#                 found_files = [file for file in files if pattern.match(file)]
-    
-#                 if found_files:
-#                     update_log(f"Found files: {found_files}")
-#                     for found_file in found_files:
-#                         remote_file_path = f"{remote_path}/{found_file}"
-#                         local_file_path = f"{temp_folder}{found_file}_{dpData['name']}.txt"
-#                         all_found_files.append(local_file_path)                        
-#                         sftp.get(remote_file_path, local_file_path)
-#                         update_log(f"Downloaded {remote_file_path} to {local_file_path}")
-                        
-#                 else:
-#                     update_log(f"No files found on {device_ip} with the format BDOS{start_year}{from_month}")
-
-#         except Exception as e:
-#             update_log(f"Failed to connect to {device_ip}: {str(e)}")
-            
-#     update_log("SFTP operations completed.")
-#     return all_found_files
-
 import re
-#import warnings
 from common import *
 import paramiko
-
-#warnings.filterwarnings(action='ignore', category=UserWarning)
 
 def _open_sftp(hostname: str, username: str, password: str, port: int = 22, timeout: int = 15):
     """
@@ -103,16 +37,10 @@ def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
     Returns:
         list of local file paths downloaded.
     """
-    # Remote path and local temp folder come from your environment/common.py
     remote_path = '/disk/var/attacklog/bdos'
-    # temp_folder is expected to be defined in common.py (imported via from common import *)
-    # e.g., temp_folder = "./Temp/"
 
-    # Build filename pattern the same way your original code did
     start_year = str(start_year)
     if to_month:
-        # Note: This char-class approach matches single *characters*; it mirrors your code.
-        # If months are '01'..'12', you may want a smarter matcher later.
         pattern = re.compile(rf"^BDOS{start_year}[{from_month}-{to_month}]")
     else:
         pattern = re.compile(rf"^BDOS{start_year}{from_month}")
@@ -134,7 +62,6 @@ def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
             update_log("connected.")
 
             try:
-                # List files in the remote directory
                 files = sftp.listdir(remote_path)
             except FileNotFoundError:
                 update_log(f"Remote path not found on {device_ip}: {remote_path}")

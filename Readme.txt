@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.2.1 - 27 October 2025 (Steve)
+		Inverse filters also effect traffic graphs.
 	v1.2.0 - 10 October 2025 (Steve)
 		Added capability for inverse policy filters. If the first policy name is --invert or -i, we will treat the rest of the policies as an exclude list.
 	v1.1.7 - 29 September 2025 (Steve)

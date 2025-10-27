@@ -253,7 +253,7 @@ def get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_
                 update_log(f"Device IP {device_ip} is not available or does not exist. Skipping.")
                 continue
             device_policies = policies.get(device_ip, [])
-            if device_policies[0] != '--invert' and device_policies[0] != '--inverse' and device_policies[0] != '-i':
+            if not device_policies or device_policies[0].lower() not in ['--invert', '--inverse', '-i', '--exclude', '-e']:
                 #Policy list does not start with --invert or -i, so treat as inclusion list.
                 inverseFilters = False
                 filters = [

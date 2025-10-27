@@ -283,7 +283,13 @@ if __name__ == '__main__':
             selected_devices = []
             if len(device_ips) > 0:
                 for ip in device_ips:
-                    selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
+                    p = policies.get(ip, [])
+                    if p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
+                        all_policies = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                        inverse_policies = [policy['rsIDSNewRulesName'] for policy in all_policies if policy['rsIDSNewRulesName'] not in p[1:]]
+                        selected_devices.append({'deviceId': ip, 'networkPolicies': inverse_policies, 'ports': []})
+                    else:
+                        selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
             rate_data = {
                 'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selected_devices),
                 'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selected_devices)
