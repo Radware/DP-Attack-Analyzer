@@ -79,10 +79,11 @@ if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?') or arg
     print("        --previous-time-range, -p                          Use the cached time range from the last time the script was run.")
     print("    <defensepro-list>     Comma-separated list of DefensePro names or IP addresses (use '' for all).")
     print("    <policy-list>         Comma-separated list of policy names (use '' for all).")
+    print("        --invert, -i, -e, --exclude     Optional: if the first policy is named --invert or -i, the list of policies will be treated as an exclusion list instead of an inclusion list.")
     print("  Examples:")
     print("    python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1")    
     print("    python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''")    
-    print('    python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"')    
+    print('    python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "-i, DP2_Excluded_Policy1, DP2_Excluded_Policy2"')    
     exit(0)
 
 
@@ -129,6 +130,8 @@ class clsConfig():
             self.set('General','ExcludeFilters','Memcached-Server-Reflect')
         if not self.config.has_option('General', 'OutputTimeFormat'):
             self.set('General','OutputTimeFormat','%%d-%%b-%%Y %%H:%%M:%%S %%Z') #Default '%d-%b-%Y %H:%M:%S %Z' looks like 11-Oct-2024 14:30:00 UTC
+        if not self.config.has_option('General', 'HexBasedSyslogIDs'):
+            self.set('General','Hex_Based_Syslog_Ids','True')
         #Reputation settings
         if not self.config.has_option('Reputation', 'use_abuseipdb'):
             self.set('Reputation','use_abuseipdb','False')
