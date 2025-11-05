@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.1.8 - 5 November 2025 (Prateek)
+		Added support to identify BDoS Rate limit in the attack lifecycle and print it in the BDoS lifecycle.
 	v1.1.7 - 29 September 2025 (Steve)
 		Removed pysftp dependencies. We now directly use paramiko instead.
 		Uncompressed .csv files are now processed in manual mode if a user unzips them.

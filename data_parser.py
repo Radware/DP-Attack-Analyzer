@@ -549,49 +549,70 @@ def parse_csv(csvfile):
     update_log(f"    {color.GREEN}Complete{color.RESET}")
     return dp_list_ip, epoch_from_time, epoch_to_time, csv_data
 
-def parse_log_file(file, syslog_ids):
-    # Initialize a dictionary to hold the log entries for each attack ID
-    attack_logs = {syslog_id: [] for syslog_id in syslog_ids}
-    
-    with open(file, 'r') as file:
-        lines = file.readlines()
 
-        # To store the most recent matching generic syslog_id for each region and attack type
+def parse_log_file(file, syslog_ids):
+    import re
+
+    # Initialize tracking
+    attack_logs = {syslog_id: [] for syslog_id in syslog_ids}
+    rate_limit_used = {syslog_id: False for syslog_id in syslog_ids}
+    thresholds = {syslog_id: None for syslog_id in syslog_ids}
+
+    with open(file, 'r') as f:
+        lines = f.readlines()
+
         latest_initial_log = {}
 
         for line in lines:
             line = line.strip()
+            if not line:
+                continue
+
             parts = line.split(',')
-            
-            # Extract timestamp, region, attack type, syslog_id, and data
+            if len(parts) < 6:
+                continue
+
             timestamp = parts[0].strip()
-            region = parts[1].strip()  # Example: 'eu1_34_0-24'
-            attack_type = parts[3].strip()  # Example: 'network flood IPv4 UDP'
-            syslog_id = parts[4].strip()  # Example: 'FFFFFFFF-FFFF-FFFF-2CB3-040F66846000'
+            region = parts[1].strip()
+            attack_type = parts[3].strip()
+            syslog_id = parts[4].strip()
             data = ','.join(parts[5:]).strip()
 
+            # ✅ Rate limit detection
+            if re.search(r'rate\s*limit\s*is\s*on', data, re.IGNORECASE):
+                for attack_id in syslog_ids:
+                    if attack_id in syslog_id:
+                        rate_limit_used[attack_id] = True
+                        break
 
-            # Check if this is a generic syslog_id
-            if syslog_id in ['FFFFFFFF-0000-0000-0000-000000000000', 'FFFFFFFF-FFFF-FFFF-0000-000000000000']:
-                # Store this line as the most recent generic syslog_id for this region and attack type
+            # ✅ Threshold detection
+            threshold_match = re.search(r'Threshold\s*[:=]?\s*(\d+)', data, re.IGNORECASE)
+            if threshold_match:
+                threshold_value = threshold_match.group(1)
+                for attack_id in syslog_ids:
+                    if attack_id in syslog_id:
+                        thresholds[attack_id] = threshold_value
+                        break
+
+            # Generic syslog
+            if syslog_id in ['FFFFFFFF-0000-0000-0000-000000000000',
+                             'FFFFFFFF-FFFF-FFFF-0000-000000000000']:
                 key = (region, attack_type)
                 latest_initial_log[key] = (timestamp, data)
-            
-            # Check if the current line contains a specific syslog_id
+                continue
+
+            # Specific syslog
             for attack_id in syslog_ids:
                 if attack_id in syslog_id:
                     key = (region, attack_type)
-                    
-                    # If there is a corresponding initial log, add it to the attack log first
                     if key in latest_initial_log:
                         attack_logs[attack_id].append(latest_initial_log[key])
-                        del latest_initial_log[key]  # Remove the initial log once used
-                    
-                    # Add the current log entry to the correct attack log
+                        del latest_initial_log[key]
                     attack_logs[attack_id].append((timestamp, data))
-                    break  # Move to the next line after processing the attack_id
+                    break
 
-    return attack_logs
+    return attack_logs, rate_limit_used, thresholds
+
  # type: ignore
 
 
@@ -676,10 +697,9 @@ def extract_state_6_footprints(attack_logs):
     return formatted_results
 
 
+def calculate_attack_metrics(categorized_logs, rate_limit_used, thresholds):
+    import datetime
 
-
-
-def calculate_attack_metrics(categorized_logs):
     metrics = {}
 
     def format_timedelta(td):
@@ -695,19 +715,28 @@ def calculate_attack_metrics(categorized_logs):
             return 'N/A'
         return f"{value:.2f}%"
 
-    for syslog_id, entries in categorized_logs.items():
-        state_2_times = []
-        state_4_times = []
-        state_6_times = []
-        state_6_transition = False
+    def convert_bps_to_mbps(bps_value):
+        try:
+            bps_value = float(bps_value)
+            mbps = bps_value / 1_000_000  # Convert bits per second to Megabits per second
+            return f"{mbps:.2f} Mbps"
+        except (ValueError, TypeError):
+            return "N/A"
 
+    for syslog_id, entries in categorized_logs.items():
         if not entries:
             continue
 
         fmt = '%d-%m-%Y %H:%M:%S'
-
+        state_2_times = []
+        state_4_times = []
+        state_6_times = []
         last_state_6 = None
         next_state_after_6 = None
+        state_6_transition = False
+
+        first_time = datetime.datetime.strptime(entries[0][0], fmt)
+        last_time = datetime.datetime.strptime(entries[-1][0], fmt)
 
         for entry in entries:
             timestamp, _, state_description = entry
@@ -721,82 +750,65 @@ def calculate_attack_metrics(categorized_logs):
                 state_4_times.append(log_time)
                 if last_state_6 and not next_state_after_6:
                     next_state_after_6 = log_time
-            elif "Entering state 6" in state_description:
+            elif (
+                "Entering state 6" in state_description
+                or 'FFFFFFFF-0000-0000-0000-000000000000' in state_description
+                or 'FFFFFFFF-FFFF-FFFF-0000-000000000000' in state_description
+            ):
                 state_6_times.append(log_time)
                 last_state_6 = log_time
                 state_6_transition = True
                 next_state_after_6 = None
-            elif 'FFFFFFFF-0000-0000-0000-000000000000' in state_description or \
-                    'FFFFFFFF-FFFF-FFFF-0000-000000000000' in state_description:
-                state_6_times.append(log_time)
-                last_state_6 = log_time
-                state_6_transition = True
-                next_state_after_6 = None
-            elif "Entering state 0" in state_description:
-                if last_state_6 and next_state_after_6:
-                    break
+
+        # Compute metrics
         first_state_2 = state_2_times[0] if state_2_times else None
-        first_state_4 = state_4_times[0] if state_4_times else None
         last_state_4 = state_4_times[-1] if state_4_times else None
-        first_time = datetime.datetime.strptime(entries[0][0], fmt)
-        last_time = datetime.datetime.strptime(entries[-1][0], fmt)
-        if state_6_times and state_6_times[0] == first_time:
-            # Burst attack detected
-            attack_time = last_time - first_time
-            blocking_time = last_time - state_6_times[0]
-            blocking_time_percentage = (blocking_time / attack_time) * 100 if attack_time.total_seconds() > 0 else None
 
-            metrics[syslog_id] = {
-                'metrics_summary': (
-                    f"Burst Attack Detected, Using previous blocking footprint\n"
-                    f"Total Attack Duration: {format_timedelta(attack_time)}\n"
-                    f"Blocking Time: {format_timedelta(blocking_time)}\n"
-                    f"Blocking Time Percentage: {format_percentage(blocking_time_percentage)}"
-                )
-            }
+        # Initial / final footprint times
+        initial_fp_time = (last_state_4 - first_state_2) if first_state_2 and last_state_4 else None
+        final_fp_time = (last_state_6 - last_state_4) if last_state_6 and last_state_4 else (
+            "Final footprint not formed" if not state_6_transition else None
+        )
+
+        # Blocking times
+        blocking_time = (
+            (next_state_after_6 - last_state_6)
+            if last_state_6 and next_state_after_6
+            else (last_time - last_state_6 if last_state_6 else None)
+        )
+        total_duration = last_time - first_time
+        blocking_time_percentage = (blocking_time / total_duration * 100) if blocking_time else None
+
+        formatted_total_duration = format_timedelta(total_duration)
+        formatted_initial_fp_time = format_timedelta(initial_fp_time)
+        formatted_final_fp_time = final_fp_time if isinstance(final_fp_time, str) else format_timedelta(final_fp_time)
+        formatted_blocking_time = format_timedelta(blocking_time)
+        formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
+
+        # Rate limiting info with threshold value (converted to Mbps)
+        if rate_limit_used.get(syslog_id):
+            threshold_val = thresholds.get(syslog_id, "N/A")
+            threshold_converted = convert_bps_to_mbps(threshold_val) if threshold_val != "N/A" else "N/A"
+            rate_limit_msg = (
+                f"Rate limiting was applied for this attack<br>"
+                f"Threshold Value: {threshold_converted}"
+            )
         else:
-            initial_fp_time = None
-            if last_state_4:
-                if first_state_2:
-                    initial_fp_time = last_state_4 - first_state_2
-                else:
-                    initial_fp_time = last_state_4 - first_time
+            rate_limit_msg = ""
 
-            final_fp_time = None
-            if last_state_6 and last_state_4:
-                final_fp_time = last_state_6 - first_state_4
-            elif not state_6_transition:
-                final_fp_time = "Final footprint not formed"
-
-            blocking_time = None
-            if last_state_6:
-                if next_state_after_6:
-                    blocking_time = next_state_after_6 - last_state_6
-                else:
-                    blocking_time = last_time - last_state_6
-
-            total_duration = last_time - first_time
-            blocking_time_percentage = None
-            if blocking_time and total_duration.total_seconds() > 0:
-                blocking_time_percentage = (blocking_time / total_duration) * 100
-
-            formatted_total_duration = format_timedelta(total_duration)
-            formatted_initial_fp_time = format_timedelta(initial_fp_time)
-            formatted_final_fp_time = final_fp_time if isinstance(final_fp_time, str) else format_timedelta(final_fp_time)
-            formatted_blocking_time = format_timedelta(blocking_time)
-            formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
-
-            metrics[syslog_id] = {
-                'metrics_summary': (
-                    f"Total Attack Duration: {formatted_total_duration}\n"
-                    f"Time taken to create initial LOW strictness footprint: {formatted_initial_fp_time}\n"
-                    f"Time taken to optimize and create the final footprint: {formatted_final_fp_time}\n"
-                    f"Blocking Time: {formatted_blocking_time}\n"
-                    f"Blocking Time Percentage: {formatted_blocking_time_percentage}"
-                )
-            }
+        metrics[syslog_id] = {
+            'metrics_summary': (
+                f"Total Attack Duration: {formatted_total_duration}<br>"
+                f"Time taken to create initial LOW strictness footprint: {formatted_initial_fp_time}<br>"
+                f"Time taken to optimize and create the final footprint: {formatted_final_fp_time}<br>"
+                f"Blocking Time: {formatted_blocking_time}<br>"
+                f"Blocking Time Percentage: {formatted_blocking_time_percentage}<br>"
+                f"{rate_limit_msg}<br>"
+            )
+        }
 
     return metrics
+
 
 def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):
     threshold_bps = threshold_gbps * 1e9
