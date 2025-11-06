@@ -267,7 +267,7 @@ class clsVision:
             raise Exception(f"Error getting application data for {DeviceIP} - {r.status_code}: {r.text}")
     
     def getDPPolicies(self, DeviceIP):
-        APIUrl = f"https://{self.ip}/mgmt/device/byip/{DeviceIP}/config/rsIDSNewRulesTable"
+        APIUrl = f"https://{self.ip}/mgmt/device/byip/{DeviceIP}/config/rsIDSNewRulesTable?count=1024"
         r = self._get(APIUrl)
         if r.status_code == 200:
             return r.json()
