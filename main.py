@@ -242,22 +242,24 @@ if __name__ == '__main__':
         for file in found_files:
             #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
-            result = data_parser.parse_log_file(file, syslog_ids)
+            result, rate_limiting_used, thresholds = data_parser.parse_log_file(file, syslog_ids)
             all_results.update(result)
             #print(f"Result for {file}: {result}")
+            #if rate_limiting_used:
+                #print("Rate limiting was used for this mitigation")
         #
-        # print(all_results)
+        #print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
         state_6_logs = data_parser.extract_state_6_footprints(all_results)
         #print(state_6_logs) 
-        metrics = data_parser.calculate_attack_metrics(categorized_logs)
-        
+        metrics = data_parser.calculate_attack_metrics(categorized_logs, rate_limiting_used, thresholds)
         for syslog_id in syslog_ids:
             if syslog_id in metrics and syslog_id in state_6_logs:
                 syslog_details[syslog_id].update(metrics[syslog_id])
                 syslog_details[syslog_id].update(state_6_logs[syslog_id])
                 #print(syslog_details)
         # Calculate top BPS and PPS using html_data.get_top_n
+            #print(syslog_details)
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, topN, threshold_gbps=1)
         for attack in top_by_bps + top_by_pps:
             dev = dp_list_ip.get(attack[1].get('Device IP', ''), {})
